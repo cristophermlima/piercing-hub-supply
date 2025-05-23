@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Marketplace from "./pages/Marketplace";
 import SupplierDashboard from "./pages/SupplierDashboard";
 import Registration from "./pages/Registration";
+import Cart from "./pages/Cart";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/dashboard" element={<SupplierDashboard />} />
           <Route path="/cadastro" element={<Registration />} />
+          <Route path="/carrinho" element={<Cart />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

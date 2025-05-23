@@ -4,6 +4,7 @@ import { Search, ShoppingCart, User, Menu, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
 
 interface HeaderProps {
   searchTerm: string;
@@ -33,10 +34,10 @@ const Header: React.FC<HeaderProps> = ({
               <Menu className="h-5 w-5" />
             </Button>
             
-            <div className="flex items-center space-x-2">
+            <Link to="/" className="flex items-center space-x-2">
               <h1 className="text-2xl font-bold">PiercerHub</h1>
               <span className="text-sm text-gray-300 hidden sm:block">Marketplace</span>
-            </div>
+            </Link>
           </div>
           
           {/* Search Bar */}
@@ -59,18 +60,22 @@ const Header: React.FC<HeaderProps> = ({
               <Bell className="h-5 w-5" />
             </Button>
             
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800 relative">
-              <ShoppingCart className="h-5 w-5" />
-              {cartItems > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 hover:bg-red-500">
-                  {cartItems}
-                </Badge>
-              )}
-            </Button>
+            <Link to="/carrinho">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800 relative">
+                <ShoppingCart className="h-5 w-5" />
+                {cartItems > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center text-xs bg-red-500 hover:bg-red-500">
+                    {cartItems}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
             
-            <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800">
-              <User className="h-5 w-5" />
-            </Button>
+            <Link to="/cadastro">
+              <Button variant="ghost" size="sm" className="text-white hover:bg-gray-800">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
