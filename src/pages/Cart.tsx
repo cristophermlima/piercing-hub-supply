@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Minus, Plus, Trash2 } from 'lucide-react';
+import { Minus, Plus, Trash2, Package, Clock, MessageSquare, Mail } from 'lucide-react';
 import Header from '@/components/Header';
 import { useToast } from '@/hooks/use-toast';
 
@@ -12,10 +12,13 @@ interface CartItem {
   name: string;
   price: number;
   supplier: string;
-  material: string;
-  size: string;
+  category: string;
+  brand: string;
+  sku: string;
   quantity: number;
   image: string;
+  availability: 'pronta-entrega' | 'sob-encomenda';
+  deliveryTime?: string;
 }
 
 const Cart = () => {
@@ -25,33 +28,42 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItem[]>([
     {
       id: 1,
-      name: 'Argola Segmento Cravejado',
-      price: 39.00,
-      supplier: 'Piercing Gold Brasil',
-      material: 'Titânio',
-      size: '10mm',
+      name: 'Luvas Nitrílicas Extra Fortes',
+      price: 89.90,
+      supplier: 'BioSafe Hospitalar',
+      category: 'insumos-estereis',
+      brand: 'MedProtect',
+      sku: 'BSH-LUV001',
       quantity: 2,
-      image: '/placeholder.svg'
+      image: '/placeholder.svg',
+      availability: 'pronta-entrega',
+      deliveryTime: '24-48h'
     },
     {
       id: 2,
-      name: 'Labret Titânio PVD Gold',
-      price: 55.00,
-      supplier: 'Top Piercing Suppliers',
-      material: 'Titânio PVD Gold',
-      size: '8mm',
+      name: 'Autoclave Digital 12L',
+      price: 2890.00,
+      supplier: 'PiercePro Equipamentos',
+      category: 'equipamentos',
+      brand: 'SteriliMax',
+      sku: 'PPE-AUT12',
       quantity: 1,
-      image: '/placeholder.svg'
+      image: '/placeholder.svg',
+      availability: 'sob-encomenda',
+      deliveryTime: '7-10 dias'
     },
     {
-      id: 6,
-      name: 'Barbell Curvo Titânio',
-      price: 32.00,
-      supplier: 'Piercing Gold Brasil',
-      material: 'Titânio',
-      size: '16mm',
-      quantity: 3,
-      image: '/placeholder.svg'
+      id: 3,
+      name: 'Agulhas Cânula Estéreis 14G',
+      price: 3.50,
+      supplier: 'SafeNeedle',
+      category: 'insumos-estereis',
+      brand: 'PierceSharp',
+      sku: 'SN-AG14G',
+      quantity: 50,
+      image: '/placeholder.svg',
+      availability: 'pronta-entrega',
+      deliveryTime: '24-48h'
     }
   ]);
 
@@ -94,8 +106,8 @@ const Cart = () => {
 
   const handleCheckout = () => {
     toast({
-      title: "Pedido enviado!",
-      description: "Seus pedidos foram enviados para os fornecedores",
+      title: "Pedidos enviados!",
+      description: "Seus pedidos foram enviados para os fornecedores via WhatsApp e e-mail",
     });
     console.log('Processando checkout para fornecedores:', Object.keys(itemsBySupplier));
   };
@@ -111,7 +123,7 @@ const Cart = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Carrinho de Compras</h1>
+        <h1 className="text-3xl font-bold mb-8">Carrinho Multi-Fornecedor</h1>
 
         {cartItems.length === 0 ? (
           <Card>
@@ -130,10 +142,22 @@ const Cart = () => {
                 <Card key={supplier}>
                   <CardHeader className="pb-4">
                     <CardTitle className="flex items-center justify-between">
-                      <span className="text-lg">{supplier}</span>
-                      <Badge variant="outline">
-                        {items.length} item{items.length !== 1 ? 's' : ''}
-                      </Badge>
+                      <div>
+                        <span className="text-lg">{supplier}</span>
+                        <Badge variant="outline" className="ml-3">
+                          {items.length} item{items.length !== 1 ? 's' : ''}
+                        </Badge>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button variant="outline" size="sm">
+                          <MessageSquare className="h-4 w-4 mr-1" />
+                          WhatsApp
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          <Mail className="h-4 w-4 mr-1" />
+                          E-mail
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -151,12 +175,28 @@ const Cart = () => {
                           <h3 className="font-semibold">{item.name}</h3>
                           <div className="flex gap-2 mt-1">
                             <Badge variant="secondary" className="text-xs">
-                              {item.material}
+                              {item.brand}
                             </Badge>
-                            <Badge variant="secondary" className="text-xs">
-                              {item.size}
+                            <Badge 
+                              variant="secondary" 
+                              className={`text-xs ${
+                                item.availability === 'pronta-entrega' 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : 'bg-yellow-100 text-yellow-700'
+                              }`}
+                            >
+                              {item.availability === 'pronta-entrega' ? (
+                                <Package className="h-3 w-3 mr-1" />
+                              ) : (
+                                <Clock className="h-3 w-3 mr-1" />
+                              )}
+                              {item.availability === 'pronta-entrega' ? 'Pronta Entrega' : 'Sob Encomenda'}
                             </Badge>
                           </div>
+                          <p className="text-xs text-gray-500 mt-1">SKU: {item.sku}</p>
+                          {item.deliveryTime && (
+                            <p className="text-xs text-gray-500">Entrega: {item.deliveryTime}</p>
+                          )}
                           <p className="text-lg font-bold mt-1">R$ {item.price.toFixed(2)}</p>
                         </div>
                         
@@ -218,15 +258,21 @@ const Cart = () => {
                     </div>
                   </div>
                   
-                  <p className="text-sm text-gray-600">
-                    Frete será calculado individualmente por cada fornecedor
-                  </p>
+                  <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-600">
+                    <h4 className="font-medium mb-2">Como funciona:</h4>
+                    <ul className="space-y-1 text-xs">
+                      <li>• Frete calculado por cada fornecedor</li>
+                      <li>• Pedidos enviados via WhatsApp/E-mail</li>
+                      <li>• Negociação direta com fornecedor</li>
+                      <li>• Pagamento conforme acordo</li>
+                    </ul>
+                  </div>
                   
                   <Button 
                     className="w-full bg-black hover:bg-gray-800"
                     onClick={handleCheckout}
                   >
-                    Finalizar Compra
+                    Enviar Pedidos aos Fornecedores
                   </Button>
                   
                   <Button variant="outline" className="w-full" asChild>

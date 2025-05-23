@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Clock, Package } from 'lucide-react';
 
 interface ProductCardProps {
   id: number;
@@ -11,11 +11,29 @@ interface ProductCardProps {
   description: string;
   price: number;
   supplier: string;
-  material: string;
-  size: string;
+  category: string;
+  productType: string;
+  brand: string;
+  size?: string;
+  stock: number;
+  availability: 'pronta-entrega' | 'sob-encomenda';
   image: string;
+  sku: string;
+  technicalDescription?: string;
+  deliveryTime?: string;
   onAddToCart: (id: number) => void;
 }
+
+const categoryLabels: Record<string, string> = {
+  'insumos-estereis': 'Insumos Estéreis',
+  'equipamentos': 'Equipamentos',
+  'joias-titanio': 'Joias de Titânio'
+};
+
+const availabilityLabels: Record<string, string> = {
+  'pronta-entrega': 'Pronta Entrega',
+  'sob-encomenda': 'Sob Encomenda'
+};
 
 const ProductCard: React.FC<ProductCardProps> = ({
   id,
@@ -23,14 +41,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
   description,
   price,
   supplier,
-  material,
+  category,
+  productType,
+  brand,
   size,
+  stock,
+  availability,
   image,
+  sku,
+  technicalDescription,
+  deliveryTime,
   onAddToCart
 }) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow duration-200">
-      <CardContent className="p-4">
+    <Card className="hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
+      <CardContent className="p-4 flex flex-col h-full">
         <div className="aspect-square bg-gray-100 rounded-lg mb-4 overflow-hidden">
           <img 
             src={image} 
@@ -39,32 +64,77 @@ const ProductCard: React.FC<ProductCardProps> = ({
           />
         </div>
         
-        <div className="space-y-3">
+        <div className="space-y-3 flex-1 flex flex-col">
           <div className="flex justify-between items-start">
-            <h3 className="font-semibold text-lg text-gray-900">{name}</h3>
-            <span className="text-lg font-bold text-black">R${price.toFixed(2)}</span>
+            <h3 className="font-semibold text-lg text-gray-900 line-clamp-2">{name}</h3>
+            <span className="text-lg font-bold text-black whitespace-nowrap ml-2">
+              R$ {price.toFixed(2)}
+            </span>
           </div>
           
           <p className="text-gray-600 text-sm line-clamp-2">{description}</p>
           
+          {technicalDescription && (
+            <p className="text-xs text-gray-500 line-clamp-2">{technicalDescription}</p>
+          )}
+          
           <div className="flex flex-wrap gap-1">
             <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
-              {material}
+              {categoryLabels[category] || category}
             </Badge>
             <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
-              {size}
+              {brand}
             </Badge>
+            {size && (
+              <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+                {size}
+              </Badge>
+            )}
           </div>
           
-          <div className="border-t pt-3">
-            <p className="text-sm text-gray-500 mb-3">Por: {supplier}</p>
+          <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center space-x-2">
+              <Badge 
+                variant={availability === 'pronta-entrega' ? 'default' : 'secondary'}
+                className={`text-xs ${
+                  availability === 'pronta-entrega' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-yellow-100 text-yellow-700'
+                }`}
+              >
+                {availability === 'pronta-entrega' ? (
+                  <Package className="h-3 w-3 mr-1" />
+                ) : (
+                  <Clock className="h-3 w-3 mr-1" />
+                )}
+                {availabilityLabels[availability]}
+              </Badge>
+            </div>
+            <span className="text-gray-500">
+              Estoque: {stock}
+            </span>
+          </div>
+          
+          {deliveryTime && (
+            <div className="text-xs text-gray-500">
+              <Clock className="h-3 w-3 inline mr-1" />
+              Entrega: {deliveryTime}
+            </div>
+          )}
+          
+          <div className="border-t pt-3 mt-auto">
+            <p className="text-sm text-gray-500 mb-3">
+              Por: <span className="font-medium">{supplier}</span>
+            </p>
+            <p className="text-xs text-gray-400 mb-3">SKU: {sku}</p>
             
             <Button 
               onClick={() => onAddToCart(id)}
               className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-center space-x-2"
+              disabled={stock === 0}
             >
               <ShoppingCart className="h-4 w-4" />
-              <span>Adicionar ao Carrinho</span>
+              <span>{stock === 0 ? 'Sem Estoque' : 'Adicionar ao Carrinho'}</span>
             </Button>
           </div>
         </div>
