@@ -15,12 +15,129 @@ export interface Product {
   sku: string;
   technicalDescription?: string;
   deliveryTime?: string;
+  material?: string;
+  threadType?: string;
+  color?: string;
+  region?: string;
+  certification?: string;
 }
 
 export const products: Product[] = [
-  // Insumos Estéreis
+  // Joias de Titânio
   {
     id: 1,
+    name: 'Argola Segmento Cravejado',
+    description: 'Argola com segmento removível cravejada com zircônias',
+    price: 89.90,
+    supplier: 'Piercing Gold Brasil',
+    category: 'joias-titanio',
+    productType: 'argola',
+    brand: 'Premium Line',
+    size: '10mm',
+    stock: 150,
+    availability: 'pronta-entrega',
+    image: '/placeholder.svg',
+    sku: 'PGB-ARG001',
+    technicalDescription: 'Titânio G23 ASTM F136. Zircônias cravadas à mão.',
+    deliveryTime: '24-48h',
+    material: 'Titânio',
+    threadType: 'Externa',
+    color: 'Natural',
+    region: 'Norte',
+    certification: 'G23 ASTM F136'
+  },
+  {
+    id: 2,
+    name: 'Labret Titânio PVD Gold',
+    description: 'Labret com acabamento PVD dourado premium',
+    price: 55.00,
+    supplier: 'Top Piercing Suppliers',
+    category: 'joias-titanio',
+    productType: 'labret',
+    brand: 'Gold Line',
+    size: '8mm',
+    stock: 200,
+    availability: 'pronta-entrega',
+    image: '/placeholder.svg',
+    sku: 'TPS-LAB002',
+    technicalDescription: 'Titânio G23 com revestimento PVD ouro 18k.',
+    deliveryTime: '24-48h',
+    material: 'Titânio',
+    threadType: 'Interna',
+    color: 'Dourado',
+    region: 'Sudeste',
+    certification: 'PVD GOLD'
+  },
+  {
+    id: 3,
+    name: 'Barbell Curvo Titânio',
+    description: 'Barbell curvo em titânio grau cirúrgico',
+    price: 45.00,
+    supplier: 'Gemas e Piercings',
+    category: 'joias-titanio',
+    productType: 'barbell',
+    brand: 'Surgical Grade',
+    size: '12mm',
+    stock: 180,
+    availability: 'pronta-entrega',
+    image: '/placeholder.svg',
+    sku: 'GP-BAR003',
+    technicalDescription: 'Curvatura anatômica. Rosca interna.',
+    deliveryTime: '48-72h',
+    material: 'Titânio',
+    threadType: 'Interna',
+    color: 'Natural',
+    region: 'Centro-Oeste',
+    certification: 'G23 ASTM F136'
+  },
+  // Joias de Ouro
+  {
+    id: 4,
+    name: 'Esferas Rosca Interna Ouro 18k',
+    description: 'Par de esferas em ouro 18k com rosca interna',
+    price: 280.00,
+    supplier: 'Elite Joias Pro',
+    category: 'joias-ouro',
+    productType: 'esferas',
+    brand: 'Gold Premium',
+    size: '4mm',
+    stock: 50,
+    availability: 'sob-encomenda',
+    image: '/placeholder.svg',
+    sku: 'EJP-ESF004',
+    technicalDescription: 'Ouro 18k maciço. Rosca compatível com titânio.',
+    deliveryTime: '7-10 dias',
+    material: 'Ouro 18k',
+    threadType: 'Interna',
+    color: 'Dourado',
+    region: 'Sudeste',
+    certification: 'AU 750'
+  },
+  {
+    id: 5,
+    name: 'Argola Ouro Rosé 14k',
+    description: 'Argola em ouro rosé 14k com fechamento suave',
+    price: 450.00,
+    supplier: 'Joias Premium Ltda',
+    category: 'joias-ouro',
+    productType: 'argola',
+    brand: 'Rosé Collection',
+    size: '12mm',
+    stock: 25,
+    availability: 'sob-encomenda',
+    image: '/placeholder.svg',
+    sku: 'JPL-ARG005',
+    technicalDescription: 'Ouro 14k rosé. Polimento espelhado.',
+    deliveryTime: '10-15 dias',
+    material: 'Ouro 14k',
+    threadType: 'Clicker',
+    color: 'Rosé',
+    region: 'Sul',
+    certification: 'AU 585'
+  },
+  // Insumos Estéreis
+  {
+    id: 6,
     name: 'Luvas Nitrílicas Extra Fortes',
     description: 'Luvas nitrílicas sem pó, extra resistentes para procedimentos de body piercing',
     price: 89.90,
@@ -34,26 +151,11 @@ export const products: Product[] = [
     image: '/placeholder.svg',
     sku: 'BSH-LUV001',
     technicalDescription: 'Caixa com 100 unidades. Material: Nitrilo sintético. Livre de látex.',
-    deliveryTime: '24-48h'
+    deliveryTime: '24-48h',
+    region: 'Nacional'
   },
   {
-    id: 2,
-    name: 'Máscaras Cirúrgicas Tripla Camada',
-    description: 'Máscaras descartáveis com tripla camada de proteção bacteriológica',
-    price: 45.00,
-    supplier: 'BioSafe Hospitalar',
-    category: 'insumos-estereis',
-    productType: 'mascaras',
-    brand: 'SafeMask',
-    stock: 300,
-    availability: 'pronta-entrega',
-    image: '/placeholder.svg',
-    sku: 'BSH-MSC002',
-    technicalDescription: 'Caixa com 50 unidades. Filtração > 95%. Elástico macio.',
-    deliveryTime: '24-48h'
-  },
-  {
-    id: 3,
+    id: 7,
     name: 'Agulhas Cânula Estéreis 14G',
     description: 'Agulhas cânula descartáveis estéreis para body piercing profissional',
     price: 3.50,
@@ -67,44 +169,12 @@ export const products: Product[] = [
     image: '/placeholder.svg',
     sku: 'SN-AG14G',
     technicalDescription: 'Unidade individual esterilizada. Aço cirúrgico 316L. Ponta tripla bisel.',
-    deliveryTime: '24-48h'
-  },
-  {
-    id: 4,
-    name: 'Campo Cirúrgico Descartável',
-    description: 'Campo cirúrgico estéril com abertura central para procedimentos',
-    price: 12.90,
-    supplier: 'Dermaclinic Distribuidora',
-    category: 'insumos-estereis',
-    productType: 'campos-cirurgicos',
-    brand: 'SterileField',
-    stock: 200,
-    availability: 'pronta-entrega',
-    image: '/placeholder.svg',
-    sku: 'DD-CC001',
-    technicalDescription: 'TNT 40g/m². Abertura 6cm. Adesivo hipoalergênico.',
-    deliveryTime: '48-72h'
-  },
-  {
-    id: 5,
-    name: 'Sabonete Antisséptico Degermante',
-    description: 'Sabonete líquido antisséptico com clorexidina para preparo da pele',
-    price: 34.90,
-    supplier: 'Dermaclinic Distribuidora',
-    category: 'insumos-estereis',
-    productType: 'antisepticos',
-    brand: 'DermaClean',
-    size: '500ml',
-    stock: 150,
-    availability: 'pronta-entrega',
-    image: '/placeholder.svg',
-    sku: 'DD-SAB500',
-    technicalDescription: 'Clorexidina 2%. pH neutro. Frasco com bico dosador.',
-    deliveryTime: '48-72h'
+    deliveryTime: '24-48h',
+    region: 'Nacional'
   },
   // Equipamentos
   {
-    id: 6,
+    id: 8,
     name: 'Autoclave Digital 12L',
     description: 'Autoclave digital microprocessada para esterilização completa',
     price: 2890.00,
@@ -118,10 +188,11 @@ export const products: Product[] = [
     image: '/placeholder.svg',
     sku: 'PPE-AUT12',
     technicalDescription: 'Câmara inox 316L. Ciclo rápido 15min. Display digital. Bivolt.',
-    deliveryTime: '7-10 dias'
+    deliveryTime: '7-10 dias',
+    region: 'Nacional'
   },
   {
-    id: 7,
+    id: 9,
     name: 'Cuba Ultrassônica Profissional',
     description: 'Cuba ultrassônica para limpeza e desinfecção de instrumentos',
     price: 890.00,
@@ -135,55 +206,30 @@ export const products: Product[] = [
     image: '/placeholder.svg',
     sku: 'PPE-CUB03',
     technicalDescription: 'Frequência 40kHz. Timer digital. Cesto inox incluso.',
-    deliveryTime: '3-5 dias'
-  },
-  {
-    id: 8,
-    name: 'Maca Hidráulica Regulável',
-    description: 'Maca hidráulica com regulagem de altura para procedimentos',
-    price: 3450.00,
-    supplier: 'MacaFlex',
-    category: 'equipamentos',
-    productType: 'macas',
-    brand: 'FlexComfort',
-    stock: 5,
-    availability: 'sob-encomenda',
-    image: '/placeholder.svg',
-    sku: 'MF-MAC001',
-    technicalDescription: 'Estrutura aço carbono. Estofado PVC antialérgico. Carga 150kg.',
-    deliveryTime: '10-15 dias'
-  },
-  {
-    id: 9,
-    name: 'Seladora Térmica para Esterilização',
-    description: 'Seladora térmica para embalagens de esterilização',
-    price: 680.00,
-    supplier: 'PiercePro Equipamentos',
-    category: 'equipamentos',
-    productType: 'seladoras',
-    brand: 'SealPro',
-    stock: 12,
-    availability: 'pronta-entrega',
-    image: '/placeholder.svg',
-    sku: 'PPE-SEL001',
-    technicalDescription: 'Largura 30cm. Temperatura regulável. Led indicador.',
-    deliveryTime: '3-5 dias'
+    deliveryTime: '3-5 dias',
+    region: 'Nacional'
   },
   {
     id: 10,
-    name: 'Swabs Estéreis Algodão',
-    description: 'Hastes flexíveis com algodão estéril para limpeza',
-    price: 18.90,
-    supplier: 'Dermaclinic Distribuidora',
-    category: 'insumos-estereis',
-    productType: 'swabs',
-    brand: 'CottonSafe',
-    stock: 400,
-    availability: 'pronta-entrega',
+    name: 'Labret Ouro Branco 18k Premium',
+    description: 'Labret em ouro branco 18k com acabamento premium',
+    price: 380.00,
+    supplier: 'Elite Joias Pro',
+    category: 'joias-ouro',
+    productType: 'labret',
+    brand: 'White Gold Line',
+    size: '6mm',
+    stock: 30,
+    availability: 'sob-encomenda',
     image: '/placeholder.svg',
-    sku: 'DD-SWB100',
-    technicalDescription: 'Pacote 100 unidades. Haste plástica flexível. 100% algodão.',
-    deliveryTime: '48-72h'
+    sku: 'EJP-LAB006',
+    technicalDescription: 'Ouro branco 18k. Rosca interna premium.',
+    deliveryTime: '7-12 dias',
+    material: 'Ouro 18k',
+    threadType: 'Interna',
+    color: 'Branco',
+    region: 'Sudeste',
+    certification: 'AU 750'
   }
 ];
 
@@ -192,3 +238,7 @@ export const categories = [...new Set(products.map(p => p.category))];
 export const productTypes = [...new Set(products.map(p => p.productType))];
 export const brands = [...new Set(products.map(p => p.brand))];
 export const availabilities = [...new Set(products.map(p => p.availability))];
+export const materials = [...new Set(products.map(p => p.material).filter(Boolean))];
+export const threadTypes = [...new Set(products.map(p => p.threadType).filter(Boolean))];
+export const colors = [...new Set(products.map(p => p.color).filter(Boolean))];
+export const regions = [...new Set(products.map(p => p.region).filter(Boolean))];

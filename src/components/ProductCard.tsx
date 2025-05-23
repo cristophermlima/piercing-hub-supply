@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Clock, Package } from 'lucide-react';
+import { ShoppingCart, Clock, Package, Gem } from 'lucide-react';
 
 interface ProductCardProps {
   id: number;
@@ -21,13 +21,19 @@ interface ProductCardProps {
   sku: string;
   technicalDescription?: string;
   deliveryTime?: string;
+  material?: string;
+  threadType?: string;
+  color?: string;
+  region?: string;
+  certification?: string;
   onAddToCart: (id: number) => void;
 }
 
 const categoryLabels: Record<string, string> = {
   'insumos-estereis': 'Insumos Estéreis',
   'equipamentos': 'Equipamentos',
-  'joias-titanio': 'Joias de Titânio'
+  'joias-titanio': 'Joias de Titânio',
+  'joias-ouro': 'Joias de Ouro'
 };
 
 const availabilityLabels: Record<string, string> = {
@@ -51,8 +57,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
   sku,
   technicalDescription,
   deliveryTime,
+  material,
+  threadType,
+  color,
+  region,
+  certification,
   onAddToCart
 }) => {
+  const isJewelry = category.includes('joias');
+
   return (
     <Card className="hover:shadow-lg transition-shadow duration-200 h-full flex flex-col">
       <CardContent className="p-4 flex flex-col h-full">
@@ -82,15 +95,41 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
               {categoryLabels[category] || category}
             </Badge>
-            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
-              {brand}
-            </Badge>
+            {material && (
+              <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
+                <Gem className="h-3 w-3 mr-1" />
+                {material}
+              </Badge>
+            )}
+            {color && color !== 'Natural' && (
+              <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">
+                {color}
+              </Badge>
+            )}
             {size && (
               <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
                 {size}
               </Badge>
             )}
+            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
+              {brand}
+            </Badge>
           </div>
+
+          {isJewelry && (
+            <div className="flex flex-wrap gap-1">
+              {threadType && (
+                <Badge variant="outline" className="text-xs">
+                  Rosca: {threadType}
+                </Badge>
+              )}
+              {certification && (
+                <Badge variant="outline" className="text-xs text-green-700 border-green-300">
+                  {certification}
+                </Badge>
+              )}
+            </div>
+          )}
           
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
@@ -119,6 +158,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <div className="text-xs text-gray-500">
               <Clock className="h-3 w-3 inline mr-1" />
               Entrega: {deliveryTime}
+            </div>
+          )}
+
+          {region && (
+            <div className="text-xs text-gray-500">
+              Região: {region}
             </div>
           )}
           

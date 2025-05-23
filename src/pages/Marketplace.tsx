@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import AdvancedFilters from '@/components/AdvancedFilters';
 import { useToast } from '@/hooks/use-toast';
-import { products, suppliers, categories, productTypes, brands, availabilities } from '@/data/products';
+import { products, suppliers, categories, productTypes, brands, availabilities, materials, colors, regions } from '@/data/products';
 
 const Marketplace = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -15,6 +15,9 @@ const Marketplace = () => {
   const [selectedProductType, setSelectedProductType] = useState('');
   const [selectedBrand, setSelectedBrand] = useState('');
   const [selectedAvailability, setSelectedAvailability] = useState('');
+  const [selectedMaterial, setSelectedMaterial] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const { toast } = useToast();
 
@@ -24,19 +27,25 @@ const Marketplace = () => {
                           product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (product.technicalDescription && product.technicalDescription.toLowerCase().includes(searchTerm.toLowerCase()));
+                          (product.technicalDescription && product.technicalDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                          (product.material && product.material.toLowerCase().includes(searchTerm.toLowerCase()));
       
       const matchesSupplier = !selectedSupplier || product.supplier === selectedSupplier;
       const matchesCategory = !selectedCategory || product.category === selectedCategory;
       const matchesProductType = !selectedProductType || product.productType === selectedProductType;
       const matchesBrand = !selectedBrand || product.brand === selectedBrand;
       const matchesAvailability = !selectedAvailability || product.availability === selectedAvailability;
+      const matchesMaterial = !selectedMaterial || product.material === selectedMaterial;
+      const matchesColor = !selectedColor || product.color === selectedColor;
+      const matchesRegion = !selectedRegion || product.region === selectedRegion;
       const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
       
       return matchesSearch && matchesSupplier && matchesCategory && matchesProductType && 
-             matchesBrand && matchesAvailability && matchesPrice;
+             matchesBrand && matchesAvailability && matchesMaterial && matchesColor && 
+             matchesRegion && matchesPrice;
     });
-  }, [searchTerm, selectedSupplier, selectedCategory, selectedProductType, selectedBrand, selectedAvailability, priceRange]);
+  }, [searchTerm, selectedSupplier, selectedCategory, selectedProductType, selectedBrand, 
+      selectedAvailability, selectedMaterial, selectedColor, selectedRegion, priceRange]);
 
   const addToCart = (productId: number) => {
     const product = products.find(p => p.id === productId);
@@ -54,6 +63,9 @@ const Marketplace = () => {
     setSelectedProductType('');
     setSelectedBrand('');
     setSelectedAvailability('');
+    setSelectedMaterial('');
+    setSelectedColor('');
+    setSelectedRegion('');
     setPriceRange([0, 5000]);
     setSearchTerm('');
   };
@@ -86,17 +98,26 @@ const Marketplace = () => {
           productTypes={productTypes}
           brands={brands}
           availabilities={availabilities}
+          materials={materials}
+          colors={colors}
+          regions={regions}
           selectedSupplier={selectedSupplier}
           selectedCategory={selectedCategory}
           selectedProductType={selectedProductType}
           selectedBrand={selectedBrand}
           selectedAvailability={selectedAvailability}
+          selectedMaterial={selectedMaterial}
+          selectedColor={selectedColor}
+          selectedRegion={selectedRegion}
           priceRange={priceRange}
           onSupplierChange={setSelectedSupplier}
           onCategoryChange={setSelectedCategory}
           onProductTypeChange={setSelectedProductType}
           onBrandChange={setSelectedBrand}
           onAvailabilityChange={setSelectedAvailability}
+          onMaterialChange={setSelectedMaterial}
+          onColorChange={setSelectedColor}
+          onRegionChange={setSelectedRegion}
           onPriceRangeChange={setPriceRange}
           onClearFilters={clearFilters}
         />
@@ -135,7 +156,7 @@ const Marketplace = () => {
         <div className="container mx-auto px-4 text-center">
           <h3 className="text-xl font-bold mb-2">PiercerHub Marketplace</h3>
           <p className="text-gray-400">Conectando profissionais do body piercing com fornecedores especializados</p>
-          <p className="text-gray-400 text-sm mt-2">Insumos • Equipamentos • Materiais Estéreis</p>
+          <p className="text-gray-400 text-sm mt-2">Joias de Titânio e Ouro • Insumos Estéreis • Equipamentos</p>
         </div>
       </footer>
     </div>
