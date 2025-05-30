@@ -3,105 +3,54 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Minus, Plus, Trash2, Package, Clock, MessageSquare, Mail } from 'lucide-react';
+import { Minus, Plus, Trash2, Package, Clock, MessageSquare, Mail, ShoppingCart } from 'lucide-react';
 import Header from '@/components/Header';
+import { useAuth } from '@/hooks/useAuth';
+import { useCart, useUpdateCartItem, useRemoveFromCart } from '@/hooks/useCart';
 import { useToast } from '@/hooks/use-toast';
-
-interface CartItem {
-  id: number;
-  name: string;
-  price: number;
-  supplier: string;
-  category: string;
-  brand: string;
-  sku: string;
-  quantity: number;
-  image: string;
-  availability: 'pronta-entrega' | 'sob-encomenda';
-  deliveryTime?: string;
-}
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    {
-      id: 1,
-      name: 'Luvas Nitrílicas Extra Fortes',
-      price: 89.90,
-      supplier: 'BioSafe Hospitalar',
-      category: 'insumos-estereis',
-      brand: 'MedProtect',
-      sku: 'BSH-LUV001',
-      quantity: 2,
-      image: '/placeholder.svg',
-      availability: 'pronta-entrega',
-      deliveryTime: '24-48h'
-    },
-    {
-      id: 2,
-      name: 'Autoclave Digital 12L',
-      price: 2890.00,
-      supplier: 'PiercePro Equipamentos',
-      category: 'equipamentos',
-      brand: 'SteriliMax',
-      sku: 'PPE-AUT12',
-      quantity: 1,
-      image: '/placeholder.svg',
-      availability: 'sob-encomenda',
-      deliveryTime: '7-10 dias'
-    },
-    {
-      id: 3,
-      name: 'Agulhas Cânula Estéreis 14G',
-      price: 3.50,
-      supplier: 'SafeNeedle',
-      category: 'insumos-estereis',
-      brand: 'PierceSharp',
-      sku: 'SN-AG14G',
-      quantity: 50,
-      image: '/placeholder.svg',
-      availability: 'pronta-entrega',
-      deliveryTime: '24-48h'
-    }
-  ]);
+  const { data: cartItems = [], isLoading } = useCart();
+  const updateCartMutation = useUpdateCartItem();
+  const removeFromCartMutation = useRemoveFromCart();
 
-  const updateQuantity = (id: number, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeItem(id);
-      return;
+  // Redirect if not authenticated
+  React.useEffect(() => {
+    if (!user && !isLoading) {
+      navigate('/auth');
     }
-    setCartItems(items => 
-      items.map(item => 
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
+  }, [user, isLoading, navigate]);
+
+  const updateQuantity = (id: string, newQuantity: number) => {
+    updateCartMutation.mutate({ id, quantity: newQuantity });
   };
 
-  const removeItem = (id: number) => {
-    setCartItems(items => items.filter(item => item.id !== id));
-    toast({
-      title: "Item removido",
-      description: "Produto removido do carrinho",
-    });
+  const removeItem = (id: string) => {
+    removeFromCartMutation.mutate(id);
   };
 
   // Group items by supplier
   const itemsBySupplier = cartItems.reduce((acc, item) => {
-    if (!acc[item.supplier]) {
-      acc[item.supplier] = [];
+    const supplierName = item.products.suppliers?.company_name || 'Fornecedor não encontrado';
+    if (!acc[supplierName]) {
+      acc[supplierName] = [];
     }
-    acc[item.supplier].push(item);
+    acc[supplierName].push(item);
     return acc;
-  }, {} as Record<string, CartItem[]>);
+  }, {} as Record<string, typeof cartItems>);
 
-  const getTotalBySupplier = (supplierItems: CartItem[]) => {
-    return supplierItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const getTotalBySupplier = (supplierItems: typeof cartItems) => {
+    return supplierItems.reduce((total, item) => total + (item.products.price * item.quantity), 0);
   };
 
   const getGrandTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.price * item.quantity), 0);
+    return cartItems.reduce((total, item) => total + (item.products.price * item.quantity), 0);
   };
 
   const handleCheckout = () => {
@@ -113,6 +62,21 @@ const Cart = () => {
   };
 
   const totalItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          cartItems={0}
+        />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Carregando carrinho...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -128,6 +92,7 @@ const Cart = () => {
         {cartItems.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
+              <ShoppingCart className="h-16 w-16 mx-auto text-gray-400 mb-4" />
               <p className="text-gray-500 text-lg mb-4">Seu carrinho está vazio</p>
               <Button asChild>
                 <a href="/marketplace">Continuar Comprando</a>
@@ -165,39 +130,36 @@ const Cart = () => {
                       <div key={item.id} className="flex items-center space-x-4 border-b border-gray-100 pb-4">
                         <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
                           <img 
-                            src={item.image} 
-                            alt={item.name}
+                            src={item.products.image_urls?.[0] || '/placeholder.svg'} 
+                            alt={item.products.name}
                             className="w-full h-full object-cover"
                           />
                         </div>
                         
                         <div className="flex-1">
-                          <h3 className="font-semibold">{item.name}</h3>
+                          <h3 className="font-semibold">{item.products.name}</h3>
                           <div className="flex gap-2 mt-1">
                             <Badge variant="secondary" className="text-xs">
-                              {item.brand}
+                              {item.products.brand}
                             </Badge>
                             <Badge 
                               variant="secondary" 
                               className={`text-xs ${
-                                item.availability === 'pronta-entrega' 
+                                item.products.availability === 'in_stock' 
                                   ? 'bg-green-100 text-green-700' 
                                   : 'bg-yellow-100 text-yellow-700'
                               }`}
                             >
-                              {item.availability === 'pronta-entrega' ? (
+                              {item.products.availability === 'in_stock' ? (
                                 <Package className="h-3 w-3 mr-1" />
                               ) : (
                                 <Clock className="h-3 w-3 mr-1" />
                               )}
-                              {item.availability === 'pronta-entrega' ? 'Pronta Entrega' : 'Sob Encomenda'}
+                              {item.products.availability === 'in_stock' ? 'Em Estoque' : 'Estoque Baixo'}
                             </Badge>
                           </div>
-                          <p className="text-xs text-gray-500 mt-1">SKU: {item.sku}</p>
-                          {item.deliveryTime && (
-                            <p className="text-xs text-gray-500">Entrega: {item.deliveryTime}</p>
-                          )}
-                          <p className="text-lg font-bold mt-1">R$ {item.price.toFixed(2)}</p>
+                          <p className="text-xs text-gray-500 mt-1">SKU: {item.products.sku}</p>
+                          <p className="text-lg font-bold mt-1">R$ {item.products.price.toFixed(2)}</p>
                         </div>
                         
                         <div className="flex items-center space-x-2">
@@ -205,6 +167,7 @@ const Cart = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={updateCartMutation.isPending}
                           >
                             <Minus className="h-4 w-4" />
                           </Button>
@@ -213,6 +176,7 @@ const Cart = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            disabled={updateCartMutation.isPending}
                           >
                             <Plus className="h-4 w-4" />
                           </Button>
@@ -221,6 +185,7 @@ const Cart = () => {
                             size="sm"
                             className="ml-2 text-red-600 hover:text-red-700"
                             onClick={() => removeItem(item.id)}
+                            disabled={removeFromCartMutation.isPending}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

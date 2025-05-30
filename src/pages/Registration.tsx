@@ -1,21 +1,61 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { User, Building2 } from 'lucide-react';
+import { User, Building2, ArrowLeft } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const Registration = () => {
   const [userType, setUserType] = useState<'piercer' | 'supplier' | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { signUp, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const userData = {
+      full_name: formData.get('full_name') as string,
+      user_type: userType,
+      cnpj: formData.get('cnpj') as string,
+      fantasy_name: formData.get('fantasy_name') as string,
+      commercial_contact: formData.get('commercial_contact') as string,
+      company_address: formData.get('company_address') as string,
+    };
+
+    await signUp(
+      formData.get('email') as string,
+      formData.get('password') as string,
+      userData
+    );
+
+    setIsLoading(false);
+  };
 
   if (!userType) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold">PiercerHub</h1>
-            <p className="text-gray-600 mt-2">Escolha como deseja se cadastrar</p>
+          <div className="flex items-center">
+            <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="text-center flex-1">
+              <h1 className="text-3xl font-bold">PiercerHub</h1>
+              <p className="text-gray-600 mt-2">Escolha como deseja se cadastrar</p>
+            </div>
           </div>
           
           <div className="space-y-4">
@@ -48,6 +88,18 @@ const Registration = () => {
                 </div>
               </CardContent>
             </Card>
+
+            <div className="text-center pt-4">
+              <p className="text-sm text-gray-600">
+                Já tem uma conta?{' '}
+                <button
+                  onClick={() => navigate('/auth')}
+                  className="text-black font-semibold hover:underline"
+                >
+                  Fazer login
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -58,70 +110,86 @@ const Registration = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-center">
-            Cadastro para {userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'}
-          </CardTitle>
+          <div className="flex items-center">
+            <Button variant="ghost" onClick={() => setUserType(null)} className="mr-2 p-2">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <CardTitle className="text-center flex-1">
+              Cadastro para {userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'}
+            </CardTitle>
+          </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome Completo</Label>
-            <Input id="name" placeholder="Seu nome completo" />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="email">E-mail</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" />
-          </div>
-          
-          {userType === 'supplier' && (
+        <CardContent>
+          <form onSubmit={handleSignUp} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fantasyName">Nome Fantasia</Label>
-              <Input id="fantasyName" placeholder="Nome da sua empresa" />
+              <Label htmlFor="full_name">Nome Completo</Label>
+              <Input id="full_name" name="full_name" placeholder="Seu nome completo" required />
             </div>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="cnpj">CNPJ</Label>
-            <Input id="cnpj" placeholder="00.000.000/0000-00" />
-          </div>
-          
-          {userType === 'supplier' && (
-            <>
+            
+            <div className="space-y-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" name="email" type="email" placeholder="seu@email.com" required />
+            </div>
+            
+            {userType === 'supplier' && (
               <div className="space-y-2">
-                <Label htmlFor="contact">Contato Comercial</Label>
-                <Input id="contact" placeholder="WhatsApp ou telefone comercial" />
+                <Label htmlFor="fantasy_name">Nome Fantasia</Label>
+                <Input id="fantasy_name" name="fantasy_name" placeholder="Nome da sua empresa" />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="address">Endereço da Empresa</Label>
-                <Input id="address" placeholder="Endereço completo" />
-              </div>
-            </>
-          )}
-          
-          <div className="space-y-2">
-            <Label htmlFor="certificate">
-              {userType === 'piercer' ? 'Certificado de Body Piercer' : 'Certificado da Empresa'}
-            </Label>
-            <Input id="certificate" type="file" accept=".pdf,.jpg,.png" />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" placeholder="Crie uma senha segura" />
-          </div>
-          
-          <Button className="w-full bg-black hover:bg-gray-800">
-            Cadastrar
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            className="w-full" 
-            onClick={() => setUserType(null)}
-          >
-            Voltar
-          </Button>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="cnpj">CNPJ</Label>
+              <Input id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" required />
+            </div>
+            
+            {userType === 'supplier' && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="commercial_contact">Contato Comercial</Label>
+                  <Input id="commercial_contact" name="commercial_contact" placeholder="WhatsApp ou telefone comercial" />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="company_address">Endereço da Empresa</Label>
+                  <Input id="company_address" name="company_address" placeholder="Endereço completo" />
+                </div>
+              </>
+            )}
+            
+            <div className="space-y-2">
+              <Label htmlFor="certificate">
+                {userType === 'piercer' ? 'Certificado de Body Piercer' : 'Certificado da Empresa'}
+              </Label>
+              <Input id="certificate" name="certificate" type="file" accept=".pdf,.jpg,.png" />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input id="password" name="password" type="password" placeholder="Crie uma senha segura" required />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full bg-black hover:bg-gray-800"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Cadastrando...' : 'Cadastrar'}
+            </Button>
+            
+            <div className="text-center pt-2">
+              <p className="text-sm text-gray-600">
+                Já tem uma conta?{' '}
+                <button
+                  type="button"
+                  onClick={() => navigate('/auth')}
+                  className="text-black font-semibold hover:underline"
+                >
+                  Fazer login
+                </button>
+              </p>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>

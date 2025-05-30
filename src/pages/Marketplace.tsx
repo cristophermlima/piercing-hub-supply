@@ -1,164 +1,119 @@
 
-import React, { useState, useMemo } from 'react';
-import { Button } from '@/components/ui/button';
+import React, { useState } from 'react';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
-import AdvancedFilters from '@/components/AdvancedFilters';
-import { useToast } from '@/hooks/use-toast';
-import { products, suppliers, categories, productTypes, brands, availabilities, materials, colors, regions } from '@/data/products';
+import FilterBar from '@/components/FilterBar';
+import { useProducts } from '@/hooks/useProducts';
+import { useCart } from '@/hooks/useCart';
 
 const Marketplace = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [cartItems, setCartItems] = useState(0);
   const [selectedSupplier, setSelectedSupplier] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedProductType, setSelectedProductType] = useState('');
-  const [selectedBrand, setSelectedBrand] = useState('');
-  const [selectedAvailability, setSelectedAvailability] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
-  const { toast } = useToast();
 
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.brand.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          (product.technicalDescription && product.technicalDescription.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                          (product.material && product.material.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesSupplier = !selectedSupplier || product.supplier === selectedSupplier;
-      const matchesCategory = !selectedCategory || product.category === selectedCategory;
-      const matchesProductType = !selectedProductType || product.productType === selectedProductType;
-      const matchesBrand = !selectedBrand || product.brand === selectedBrand;
-      const matchesAvailability = !selectedAvailability || product.availability === selectedAvailability;
-      const matchesMaterial = !selectedMaterial || product.material === selectedMaterial;
-      const matchesColor = !selectedColor || product.color === selectedColor;
-      const matchesRegion = !selectedRegion || product.region === selectedRegion;
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
-      
-      return matchesSearch && matchesSupplier && matchesCategory && matchesProductType && 
-             matchesBrand && matchesAvailability && matchesMaterial && matchesColor && 
-             matchesRegion && matchesPrice;
-    });
-  }, [searchTerm, selectedSupplier, selectedCategory, selectedProductType, selectedBrand, 
-      selectedAvailability, selectedMaterial, selectedColor, selectedRegion, priceRange]);
+  const { data: products = [], isLoading } = useProducts();
+  const { data: cartItems = [] } = useCart();
 
-  const addToCart = (productId: number) => {
-    const product = products.find(p => p.id === productId);
-    setCartItems(cartItems + 1);
-    toast({
-      title: "Produto adicionado",
-      description: `${product?.name} foi adicionado ao carrinho`,
-    });
-    console.log(`Produto ${productId} adicionado ao carrinho`);
-  };
+  // Filter products based on search and filters
+  const filteredProducts = products.filter(product => {
+    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         product.brand?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesSupplier = !selectedSupplier || product.suppliers?.company_name === selectedSupplier;
+    const matchesCategory = !selectedCategory || product.categories?.name === selectedCategory;
+    const matchesMaterial = !selectedMaterial || product.material === selectedMaterial;
+
+    return matchesSearch && matchesSupplier && matchesCategory && matchesMaterial;
+  });
+
+  // Get unique values for filters
+  const suppliers = [...new Set(products.map(p => p.suppliers?.company_name).filter(Boolean))];
+  const categories = [...new Set(products.map(p => p.categories?.name).filter(Boolean))];
+  const materials = [...new Set(products.map(p => p.material).filter(Boolean))];
 
   const clearFilters = () => {
     setSelectedSupplier('');
     setSelectedCategory('');
-    setSelectedProductType('');
-    setSelectedBrand('');
-    setSelectedAvailability('');
     setSelectedMaterial('');
-    setSelectedColor('');
-    setSelectedRegion('');
-    setPriceRange([0, 5000]);
-    setSearchTerm('');
   };
+
+  const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          cartItems={totalCartItems}
+        />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">Carregando produtos...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header 
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
-        cartItems={cartItems}
+        cartItems={totalCartItems}
       />
 
-      {/* Navigation */}
-      <nav className="bg-white border-b border-gray-200">
-        <div className="container mx-auto px-4">
-          <div className="flex space-x-8 py-4">
-            <a href="/" className="text-gray-600 hover:text-black font-medium">Página Inicial</a>
-            <a href="#" className="text-gray-600 hover:text-black font-medium">Base Fornecedores</a>
-            <a href="#" className="text-gray-600 hover:text-black font-medium">Catálogo</a>
-            <a href="#" className="text-black font-medium border-b-2 border-black">Produtos</a>
-          </div>
-        </div>
-      </nav>
+      <FilterBar
+        suppliers={suppliers}
+        categories={categories}
+        materials={materials}
+        selectedSupplier={selectedSupplier}
+        selectedCategory={selectedCategory}
+        selectedMaterial={selectedMaterial}
+        onSupplierChange={setSelectedSupplier}
+        onCategoryChange={setSelectedCategory}
+        onMaterialChange={setSelectedMaterial}
+        onClearFilters={clearFilters}
+      />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Advanced Filters */}
-        <AdvancedFilters
-          suppliers={suppliers}
-          categories={categories}
-          productTypes={productTypes}
-          brands={brands}
-          availabilities={availabilities}
-          materials={materials}
-          colors={colors}
-          regions={regions}
-          selectedSupplier={selectedSupplier}
-          selectedCategory={selectedCategory}
-          selectedProductType={selectedProductType}
-          selectedBrand={selectedBrand}
-          selectedAvailability={selectedAvailability}
-          selectedMaterial={selectedMaterial}
-          selectedColor={selectedColor}
-          selectedRegion={selectedRegion}
-          priceRange={priceRange}
-          onSupplierChange={setSelectedSupplier}
-          onCategoryChange={setSelectedCategory}
-          onProductTypeChange={setSelectedProductType}
-          onBrandChange={setSelectedBrand}
-          onAvailabilityChange={setSelectedAvailability}
-          onMaterialChange={setSelectedMaterial}
-          onColorChange={setSelectedColor}
-          onRegionChange={setSelectedRegion}
-          onPriceRangeChange={setPriceRange}
-          onClearFilters={clearFilters}
-        />
-
-        {/* Results Counter */}
-        <div className="mb-6">
-          <p className="text-gray-600">
-            {filteredProducts.length} produto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
-            {searchTerm && ` para "${searchTerm}"`}
-          </p>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">
+            Marketplace ({filteredProducts.length} produtos)
+          </h1>
         </div>
 
-        {/* Products Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              {...product}
-              onAddToCart={addToCart}
-            />
-          ))}
-        </div>
-
-        {filteredProducts.length === 0 && (
+        {filteredProducts.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">Nenhum produto encontrado com os filtros aplicados.</p>
-            <Button className="mt-4" onClick={clearFilters}>
-              Ver todos os produtos
-            </Button>
+            <p className="text-gray-500">Nenhum produto encontrado.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                id={product.id}
+                name={product.name}
+                description={product.description || ''}
+                price={product.price}
+                supplier={product.suppliers?.company_name || 'Fornecedor não encontrado'}
+                category={product.categories?.name || 'Categoria não encontrada'}
+                brand={product.brand || ''}
+                size={product.size}
+                stock={product.stock_quantity}
+                availability={product.availability}
+                image={product.image_urls?.[0] || '/placeholder.svg'}
+                sku={product.sku || ''}
+                technicalDescription={product.technical_description}
+                material={product.material}
+                color={product.color}
+                region={product.region}
+              />
+            ))}
           </div>
         )}
       </div>
-
-      {/* Footer */}
-      <footer className="bg-black text-white py-8 mt-16">
-        <div className="container mx-auto px-4 text-center">
-          <h3 className="text-xl font-bold mb-2">PiercerHub Marketplace</h3>
-          <p className="text-gray-400">Conectando profissionais do body piercing com fornecedores especializados</p>
-          <p className="text-gray-400 text-sm mt-2">Joias de Titânio e Ouro • Insumos Estéreis • Equipamentos</p>
-        </div>
-      </footer>
     </div>
   );
 };

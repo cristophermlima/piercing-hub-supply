@@ -4,41 +4,33 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ShoppingCart, Clock, Package, Gem } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAddToCart } from '@/hooks/useCart';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductCardProps {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
   supplier: string;
   category: string;
-  productType: string;
   brand: string;
   size?: string;
   stock: number;
-  availability: 'pronta-entrega' | 'sob-encomenda';
+  availability: 'in_stock' | 'low_stock' | 'out_of_stock';
   image: string;
   sku: string;
   technicalDescription?: string;
-  deliveryTime?: string;
   material?: string;
-  threadType?: string;
   color?: string;
   region?: string;
-  certification?: string;
-  onAddToCart: (id: number) => void;
 }
 
-const categoryLabels: Record<string, string> = {
-  'insumos-estereis': 'Insumos Estéreis',
-  'equipamentos': 'Equipamentos',
-  'joias-titanio': 'Joias de Titânio',
-  'joias-ouro': 'Joias de Ouro'
-};
-
 const availabilityLabels: Record<string, string> = {
-  'pronta-entrega': 'Pronta Entrega',
-  'sob-encomenda': 'Sob Encomenda'
+  'in_stock': 'Em Estoque',
+  'low_stock': 'Estoque Baixo',
+  'out_of_stock': 'Sem Estoque'
 };
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -48,7 +40,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
   price,
   supplier,
   category,
-  productType,
   brand,
   size,
   stock,
@@ -56,14 +47,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
   image,
   sku,
   technicalDescription,
-  deliveryTime,
   material,
-  threadType,
   color,
-  region,
-  certification,
-  onAddToCart
+  region
 }) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const addToCartMutation = useAddToCart();
+
+  const handleAddToCart = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    addToCartMutation.mutate({ productId: id });
+  };
+
   const isJewelry = category.includes('joias');
 
   return (
@@ -93,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           
           <div className="flex flex-wrap gap-1">
             <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-700">
-              {categoryLabels[category] || category}
+              {category}
             </Badge>
             {material && (
               <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">
@@ -115,33 +115,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
               {brand}
             </Badge>
           </div>
-
-          {isJewelry && (
-            <div className="flex flex-wrap gap-1">
-              {threadType && (
-                <Badge variant="outline" className="text-xs">
-                  Rosca: {threadType}
-                </Badge>
-              )}
-              {certification && (
-                <Badge variant="outline" className="text-xs text-green-700 border-green-300">
-                  {certification}
-                </Badge>
-              )}
-            </div>
-          )}
           
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-2">
               <Badge 
-                variant={availability === 'pronta-entrega' ? 'default' : 'secondary'}
+                variant={availability === 'in_stock' ? 'default' : 'secondary'}
                 className={`text-xs ${
-                  availability === 'pronta-entrega' 
+                  availability === 'in_stock' 
                     ? 'bg-green-100 text-green-700' 
-                    : 'bg-yellow-100 text-yellow-700'
+                    : availability === 'low_stock'
+                    ? 'bg-yellow-100 text-yellow-700'
+                    : 'bg-red-100 text-red-700'
                 }`}
               >
-                {availability === 'pronta-entrega' ? (
+                {availability === 'in_stock' ? (
                   <Package className="h-3 w-3 mr-1" />
                 ) : (
                   <Clock className="h-3 w-3 mr-1" />
@@ -153,13 +140,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               Estoque: {stock}
             </span>
           </div>
-          
-          {deliveryTime && (
-            <div className="text-xs text-gray-500">
-              <Clock className="h-3 w-3 inline mr-1" />
-              Entrega: {deliveryTime}
-            </div>
-          )}
 
           {region && (
             <div className="text-xs text-gray-500">
@@ -174,12 +154,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <p className="text-xs text-gray-400 mb-3">SKU: {sku}</p>
             
             <Button 
-              onClick={() => onAddToCart(id)}
+              onClick={handleAddToCart}
               className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-center space-x-2"
-              disabled={stock === 0}
+              disabled={stock === 0 || availability === 'out_of_stock' || addToCartMutation.isPending}
             >
               <ShoppingCart className="h-4 w-4" />
-              <span>{stock === 0 ? 'Sem Estoque' : 'Adicionar ao Carrinho'}</span>
+              <span>
+                {stock === 0 || availability === 'out_of_stock' 
+                  ? 'Sem Estoque' 
+                  : addToCartMutation.isPending 
+                  ? 'Adicionando...' 
+                  : 'Adicionar ao Carrinho'
+                }
+              </span>
             </Button>
           </div>
         </div>
