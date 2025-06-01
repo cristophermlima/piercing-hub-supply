@@ -4,9 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart, Users, Shield, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Se o usuário está logado, redireciona para a página apropriada
+  React.useEffect(() => {
+    if (user) {
+      // Por enquanto redirecionamos para o marketplace
+      // Futuramente podemos verificar o tipo de usuário e redirecionar apropriadamente
+      navigate('/marketplace');
+    }
+  }, [user, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
@@ -22,13 +33,13 @@ const Index = () => {
             <div className="flex items-center space-x-4">
               <Button 
                 variant="outline" 
-                onClick={() => navigate('/cadastro')}
-                className="border-white text-white hover:bg-white hover:text-black"
+                onClick={() => navigate('/auth')}
+                className="border-white text-white hover:bg-white hover:text-black bg-transparent"
               >
                 Cadastrar
               </Button>
               <Button 
-                onClick={() => navigate('/marketplace')}
+                onClick={() => navigate('/auth')}
                 className="bg-white text-black hover:bg-gray-200"
               >
                 Entrar
@@ -51,7 +62,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
-              onClick={() => navigate('/cadastro')}
+              onClick={() => navigate('/auth')}
               className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg"
             >
               Começar Agora
@@ -60,7 +71,7 @@ const Index = () => {
               variant="outline" 
               size="lg"
               onClick={() => navigate('/marketplace')}
-              className="border-white text-white hover:bg-white hover:text-black px-8 py-3 text-lg"
+              className="border-white text-white hover:bg-white hover:text-black bg-transparent px-8 py-3 text-lg"
             >
               Ver Catálogo
             </Button>
@@ -130,7 +141,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg"
-              onClick={() => navigate('/cadastro')}
+              onClick={() => navigate('/auth')}
               className="bg-white text-black hover:bg-gray-200"
             >
               Sou Body Piercer
@@ -138,8 +149,8 @@ const Index = () => {
             <Button 
               variant="outline" 
               size="lg"
-              onClick={() => navigate('/cadastro')}
-              className="border-white text-white hover:bg-white hover:text-black"
+              onClick={() => navigate('/auth')}
+              className="border-white text-white hover:bg-white hover:text-black bg-transparent"
             >
               Sou Fornecedor
             </Button>

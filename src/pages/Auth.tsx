@@ -18,7 +18,7 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/marketplace');
     }
   }, [user, navigate]);
 
@@ -36,13 +36,24 @@ const Auth = () => {
       company_address: formData.get('company_address') as string,
     };
 
-    await signUp(
+    const result = await signUp(
       formData.get('email') as string,
       formData.get('password') as string,
       userData
     );
 
     setIsLoading(false);
+
+    // Redirecionar baseado no tipo de usuário após cadastro bem-sucedido
+    if (result.needsRedirect && !result.error) {
+      setTimeout(() => {
+        if (result.userType === 'supplier') {
+          navigate('/dashboard');
+        } else {
+          navigate('/marketplace');
+        }
+      }, 1500); // Espera um pouco para mostrar a mensagem de sucesso
+    }
   };
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -50,12 +61,19 @@ const Auth = () => {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    await signIn(
+    const result = await signIn(
       formData.get('email') as string,
       formData.get('password') as string
     );
 
     setIsLoading(false);
+
+    // Após login bem-sucedido, redireciona para marketplace
+    if (!result.error) {
+      setTimeout(() => {
+        navigate('/marketplace');
+      }, 1000);
+    }
   };
 
   return (
