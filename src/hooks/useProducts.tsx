@@ -90,6 +90,7 @@ export const useAddProduct = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
       toast({
         title: "Produto adicionado!",
         description: "Produto foi adicionado ao catálogo com sucesso.",
@@ -99,6 +100,111 @@ export const useAddProduct = () => {
       console.error('Erro ao adicionar produto:', error);
       toast({
         title: "Erro ao adicionar produto",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (productData: Partial<Product> & { id: string }) => {
+      const { id, ...updateData } = productData;
+      
+      const { data, error } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      toast({
+        title: "Produto atualizado!",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar produto:', error);
+      toast({
+        title: "Erro ao atualizar produto",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+      return productId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      toast({
+        title: "Produto excluído!",
+        description: "O produto foi removido do catálogo.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir produto:', error);
+      toast({
+        title: "Erro ao excluir produto",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useToggleProductStatus = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ productId, isActive }: { productId: string; isActive: boolean }) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({ is_active: isActive })
+        .eq('id', productId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      toast({
+        title: data.is_active ? "Produto ativado!" : "Produto desativado!",
+        description: data.is_active ? "O produto está visível no marketplace." : "O produto foi ocultado do marketplace.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao alterar status do produto:', error);
+      toast({
+        title: "Erro ao alterar status",
         description: error.message,
         variant: "destructive"
       });
