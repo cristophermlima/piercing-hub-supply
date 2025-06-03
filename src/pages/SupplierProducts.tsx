@@ -27,22 +27,25 @@ const SupplierProducts = () => {
   console.log('SupplierProducts - Profile:', profile);
   console.log('SupplierProducts - Profile loading:', profileLoading);
 
-  // Show loading while profile is being fetched
-  if (!user || profileLoading) {
+  // Show loading only if user is not available
+  if (!user) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <h2 className="text-xl font-semibold mb-2">Carregando...</h2>
-            <p className="text-gray-600">Verificando perfil do usuário...</p>
+            <p className="text-gray-600">Verificando autenticação...</p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  // Check if user is supplier - use user metadata as fallback
-  const isSupplier = profile?.user_type === 'supplier' || user?.user_metadata?.user_type === 'supplier';
+  // Check if user is supplier - prioritize user metadata over profile data
+  const userType = profile?.user_type || user?.user_metadata?.user_type;
+  const isSupplier = userType === 'supplier';
+
+  console.log('SupplierProducts - User type:', userType, 'Is supplier:', isSupplier);
 
   if (!isSupplier) {
     return (
