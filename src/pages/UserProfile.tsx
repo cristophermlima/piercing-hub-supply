@@ -1,245 +1,170 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { User, Building, Mail, Phone, MapPin, Calendar, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-import Header from '@/components/Header';
+import { Badge } from '@/components/ui/badge';
+import { User, ShoppingBag, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useCart } from '@/hooks/useCart';
 import { useNavigate } from 'react-router-dom';
 
 const UserProfile = () => {
-  const { user } = useAuth();
-  const { data: profile, isLoading } = useProfile();
-  const { data: cartItems = [] } = useCart();
+  const { user, signOut } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const { items: cartItems = [] } = useCart();
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
 
-  // Redirect if not authenticated
-  React.useEffect(() => {
-    if (!user && !isLoading) {
-      navigate('/auth');
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
     }
-  }, [user, isLoading, navigate]);
+  };
 
-  const totalItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
-
-  if (isLoading) {
+  if (!user) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header 
-          searchTerm=""
-          onSearchChange={() => {}}
-          cartItems={0}
-        />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Carregando perfil...</div>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+            <p className="text-gray-600">Você precisa estar logado para ver seu perfil.</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  if (!profile) {
+  if (profileLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header 
-          searchTerm=""
-          onSearchChange={() => {}}
-          cartItems={totalItemsCount}
-        />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Perfil não encontrado</div>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">Carregando perfil...</div>
       </div>
     );
   }
 
-  const getStatusBadge = () => {
-    return (
-      <Badge variant="secondary" className="bg-blue-100 text-blue-700">
-        <Clock className="h-3 w-3 mr-1" />
-        Ativo
-      </Badge>
-    );
-  };
-
-  const getUserTypeLabel = (userType: string) => {
-    return userType === 'supplier' ? 'Fornecedor' : 'Piercer';
-  };
+  const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        searchTerm=""
-        onSearchChange={() => {}}
-        cartItems={totalItemsCount}
-      />
-
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Profile Overview */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader className="text-center">
-                <div className="w-24 h-24 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <User className="h-12 w-12 text-gray-500" />
-                </div>
-                <CardTitle className="text-xl">{profile.full_name}</CardTitle>
-                <div className="flex justify-center space-x-2 mt-2">
-                  <Badge variant="outline">
-                    {getUserTypeLabel(profile.user_type)}
-                  </Badge>
-                  {getStatusBadge()}
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Mail className="h-4 w-4" />
-                  <span>{profile.email}</span>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <Calendar className="h-4 w-4" />
-                  <span>Membro desde {new Date(profile.created_at).toLocaleDateString('pt-BR')}</span>
-                </div>
-                {profile.user_type === 'supplier' && (
-                  <>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Building className="h-4 w-4" />
-                      <span>{profile.fantasy_name || 'Nome fantasia não informado'}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Phone className="h-4 w-4" />
-                      <span>{profile.commercial_contact || 'Contato não informado'}</span>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 bg-gray-300 rounded-full flex items-center justify-center">
+              <User className="h-8 w-8 text-gray-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">
+                {profile?.fantasy_name || profile?.full_name || 'Usuário'}
+              </h1>
+              <p className="text-gray-600">{user.email}</p>
+            </div>
           </div>
-
-          {/* Profile Details */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Personal Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <User className="h-5 w-5" />
-                  <span>Informações Pessoais</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="full_name">Nome Completo</Label>
-                    <Input
-                      id="full_name"
-                      value={profile.full_name}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input
-                      id="email"
-                      value={profile.email}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="cnpj">CNPJ</Label>
-                    <Input
-                      id="cnpj"
-                      value={profile.cnpj}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="user_type">Tipo de Usuário</Label>
-                    <Input
-                      id="user_type"
-                      value={getUserTypeLabel(profile.user_type)}
-                      readOnly
-                      className="bg-gray-50"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Business Information (for suppliers) */}
-            {profile.user_type === 'supplier' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Building className="h-5 w-5" />
-                    <span>Informações da Empresa</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="fantasy_name">Nome Fantasia</Label>
-                      <Input
-                        id="fantasy_name"
-                        value={profile.fantasy_name || ''}
-                        readOnly
-                        className="bg-gray-50"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="commercial_contact">Contato Comercial</Label>
-                      <Input
-                        id="commercial_contact"
-                        value={profile.commercial_contact || ''}
-                        readOnly
-                        className="bg-gray-50"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <Label htmlFor="company_address">Endereço da Empresa</Label>
-                    <Textarea
-                      id="company_address"
-                      value={profile.company_address || ''}
-                      readOnly
-                      className="bg-gray-50"
-                      rows={3}
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Account Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Ações da Conta</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-wrap gap-4">
-                  <Button variant="outline" onClick={() => navigate('/marketplace')}>
-                    Ir para Marketplace
-                  </Button>
-                  {profile.user_type === 'supplier' && (
-                    <Button variant="outline" onClick={() => navigate('/dashboard')}>
-                      Painel do Fornecedor
-                    </Button>
-                  )}
-                  <Button variant="outline" onClick={() => navigate('/cart')}>
-                    Ver Carrinho
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+          <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sair
+          </Button>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Informações do Usuário */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Informações Pessoais</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>Nome Completo</Label>
+                <Input value={profile?.full_name || ''} disabled={!isEditing} />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input value={user.email} disabled />
+              </div>
+              <div>
+                <Label>Tipo de Usuário</Label>
+                <div className="mt-2">
+                  <Badge variant={profile?.user_type === 'supplier' ? 'default' : 'secondary'}>
+                    {profile?.user_type === 'supplier' ? 'Fornecedor' : 'Piercer'}
+                  </Badge>
+                </div>
+              </div>
+              {profile?.user_type === 'supplier' && (
+                <>
+                  <div>
+                    <Label>Nome Fantasia</Label>
+                    <Input value={profile?.fantasy_name || ''} disabled={!isEditing} />
+                  </div>
+                  <div>
+                    <Label>CNPJ</Label>
+                    <Input value={profile?.cnpj || ''} disabled={!isEditing} />
+                  </div>
+                </>
+              )}
+              <Button
+                variant={isEditing ? "default" : "outline"}
+                onClick={() => setIsEditing(!isEditing)}
+                className="w-full"
+              >
+                {isEditing ? 'Salvar Alterações' : 'Editar Perfil'}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Estatísticas do Carrinho */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <ShoppingBag className="h-5 w-5" />
+                <span>Meu Carrinho</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-center py-4">
+                <div className="text-3xl font-bold text-gray-900 mb-2">
+                  {totalCartItems}
+                </div>
+                <p className="text-gray-600 mb-4">
+                  {totalCartItems === 1 ? 'item no carrinho' : 'itens no carrinho'}
+                </p>
+                <Button 
+                  onClick={() => navigate('/cart')}
+                  className="w-full"
+                  disabled={totalCartItems === 0}
+                >
+                  Ver Carrinho
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Ações Rápidas */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Ações Rápidas</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button variant="outline" onClick={() => navigate('/marketplace')}>
+                Ir ao Marketplace
+              </Button>
+              {profile?.user_type === 'supplier' && (
+                <Button variant="outline" onClick={() => navigate('/dashboard')}>
+                  Dashboard do Fornecedor
+                </Button>
+              )}
+              <Button variant="outline" onClick={() => navigate('/cart')}>
+                Ver Carrinho
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

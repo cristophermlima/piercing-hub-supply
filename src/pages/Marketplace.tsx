@@ -13,7 +13,7 @@ const Marketplace = () => {
   const [selectedMaterial, setSelectedMaterial] = useState('');
 
   const { data: products = [], isLoading } = useProducts();
-  const { data: cartItems = [] } = useCart();
+  const { items: cartItems = [] } = useCart();
 
   // Filter products based on search and filters
   const filteredProducts = products.filter(product => {

@@ -1,113 +1,145 @@
 
-import React, { useState } from 'react';
-import Header from '@/components/Header';
-import EmptyCart from '@/components/cart/EmptyCart';
-import SupplierSection from '@/components/cart/SupplierSection';
-import OrderSummary from '@/components/cart/OrderSummary';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
+import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
-import { useCart, useUpdateCartItem, useRemoveFromCart } from '@/hooks/useCart';
-import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
-  const [searchTerm, setSearchTerm] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
-  const { data: cartItems = [], isLoading } = useCart();
-  const updateCartMutation = useUpdateCartItem();
-  const removeFromCartMutation = useRemoveFromCart();
+  const { items, updateQuantity, removeFromCart, clearCart, totalItems, totalPrice, isLoading } = useCart();
 
-  // Redirect if not authenticated
-  React.useEffect(() => {
-    if (!user && !isLoading) {
-      navigate('/auth');
-    }
-  }, [user, isLoading, navigate]);
-
-  const updateQuantity = (id: string, newQuantity: number) => {
-    updateCartMutation.mutate({ id, quantity: newQuantity });
-  };
-
-  const removeItem = (id: string) => {
-    removeFromCartMutation.mutate(id);
-  };
-
-  // Group items by supplier
-  const itemsBySupplier = cartItems.reduce((acc, item) => {
-    const supplierName = item.products.suppliers?.company_name || 'Fornecedor não encontrado';
-    if (!acc[supplierName]) {
-      acc[supplierName] = [];
-    }
-    acc[supplierName].push(item);
-    return acc;
-  }, {} as Record<string, typeof cartItems>);
-
-  const handleCheckout = () => {
-    toast({
-      title: "Pedidos enviados!",
-      description: "Seus pedidos foram enviados para os fornecedores via WhatsApp e e-mail",
-    });
-    console.log('Processando checkout para fornecedores:', Object.keys(itemsBySupplier));
-  };
-
-  const totalItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Faça login</h2>
+            <p className="text-gray-600 mb-4">Você precisa estar logado para ver seu carrinho.</p>
+            <Button onClick={() => navigate('/auth')}>
+              Fazer Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Header 
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          cartItems={0}
-        />
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">Carregando carrinho...</div>
-        </div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">Carregando carrinho...</div>
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <ShoppingCart className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Carrinho vazio</h2>
+            <p className="text-gray-600 mb-4">Adicione alguns produtos ao seu carrinho.</p>
+            <Button onClick={() => navigate('/marketplace')}>
+              Ir ao Marketplace
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
-        cartItems={totalItemsCount}
-      />
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Meu Carrinho ({totalItems} itens)</h1>
+          <Button variant="outline" onClick={clearCart}>
+            Limpar Carrinho
+          </Button>
+        </div>
 
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Carrinho Multi-Fornecedor</h1>
-
-        {cartItems.length === 0 ? (
-          <EmptyCart />
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Cart Items */}
-            <div className="lg:col-span-2 space-y-6">
-              {Object.entries(itemsBySupplier).map(([supplier, items]) => (
-                <SupplierSection
-                  key={supplier}
-                  supplier={supplier}
-                  items={items}
-                  onUpdateQuantity={updateQuantity}
-                  onRemove={removeItem}
-                  isUpdating={updateCartMutation.isPending}
-                  isRemoving={removeFromCartMutation.isPending}
-                />
-              ))}
-            </div>
-
-            {/* Order Summary */}
-            <div className="lg:col-span-1">
-              <OrderSummary
-                itemsBySupplier={itemsBySupplier}
-                onCheckout={handleCheckout}
-              />
-            </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-4">
+            {items.map((item) => (
+              <Card key={item.id}>
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-4">
+                    <img
+                      src={item.products.image_urls?.[0] || '/placeholder.svg'}
+                      alt={item.products.name}
+                      className="w-20 h-20 object-cover rounded"
+                    />
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{item.products.name}</h3>
+                      <p className="text-sm text-gray-600">{item.products.description}</p>
+                      <p className="text-sm text-gray-500">
+                        Por: {item.products.suppliers?.company_name}
+                      </p>
+                      <p className="font-semibold text-lg">R$ {item.products.price.toFixed(2)}</p>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="px-4 py-2 border rounded">{item.quantity}</span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
-        )}
+
+          <div className="lg:col-span-1">
+            <Card className="sticky top-8">
+              <CardHeader>
+                <CardTitle>Resumo do Pedido</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between">
+                  <span>Subtotal:</span>
+                  <span>R$ {totalPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Frete:</span>
+                  <span>A calcular</span>
+                </div>
+                <div className="border-t pt-4">
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span>Total:</span>
+                    <span>R$ {totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+                <Button className="w-full bg-black hover:bg-gray-800 text-white">
+                  Finalizar Compra
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
