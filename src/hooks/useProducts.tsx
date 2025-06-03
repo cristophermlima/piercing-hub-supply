@@ -2,7 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { mockProducts } from '@/data/mockProducts';
+import { useAuth } from '@/hooks/useAuth';
 
 export interface Product {
   id: string;
@@ -36,49 +36,22 @@ export const useProducts = () => {
   return useQuery({
     queryKey: ['products'],
     queryFn: async () => {
-      try {
-        const { data, error } = await supabase
-          .from('products')
-          .select(`
-            *,
-            suppliers(company_name, user_id),
-            categories(name, slug)
-          `)
-          .eq('is_active', true)
-          .order('created_at', { ascending: false });
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          suppliers(company_name, user_id),
+          categories(name, slug)
+        `)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
 
-        if (error) throw error;
-        
-        // Se não há produtos no banco, retorna os produtos mock
-        if (!data || data.length === 0) {
-          console.log('Usando produtos fictícios para demonstração');
-          return mockProducts.map(product => ({
-            ...product,
-            stock_quantity: product.stock,
-            image_urls: [product.image],
-            supplier_id: 'mock-supplier',
-            category_id: 'mock-category',
-            is_active: true,
-            suppliers: { company_name: product.supplier, user_id: 'mock-user' },
-            categories: { name: product.category, slug: product.category }
-          }));
-        }
-        
-        return data as Product[];
-      } catch (error) {
+      if (error) {
         console.error('Erro ao buscar produtos:', error);
-        // Em caso de erro, retorna produtos mock
-        return mockProducts.map(product => ({
-          ...product,
-          stock_quantity: product.stock,
-          image_urls: [product.image],
-          supplier_id: 'mock-supplier',
-          category_id: 'mock-category',
-          is_active: true,
-          suppliers: { company_name: product.supplier, user_id: 'mock-user' },
-          categories: { name: product.category, slug: product.category }
-        }));
+        throw error;
       }
+      
+      return data as Product[];
     }
   });
 };
@@ -86,12 +59,29 @@ export const useProducts = () => {
 export const useAddProduct = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (productData: Omit<Product, 'id' | 'suppliers' | 'categories'>) => {
+      if (!user) throw new Error('Usuário não autenticado');
+
+      // Buscar o supplier_id do usuário atual
+      const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (supplierError || !supplier) {
+        throw new Error('Usuário não é um fornecedor válido');
+      }
+
       const { data, error } = await supabase
         .from('products')
-        .insert(productData)
+        .insert({
+          ...productData,
+          supplier_id: supplier.id
+        })
         .select()
         .single();
 
@@ -106,11 +96,44 @@ export const useAddProduct = () => {
       });
     },
     onError: (error) => {
+      console.error('Erro ao adicionar produto:', error);
       toast({
         title: "Erro ao adicionar produto",
         description: error.message,
         variant: "destructive"
       });
     }
+  });
+};
+
+export const useSupplierProducts = () => {
+  const { user } = useAuth();
+  
+  return useQuery({
+    queryKey: ['supplier-products', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data: supplier, error: supplierError } = await supabase
+        .from('suppliers')
+        .select('id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (supplierError || !supplier) return [];
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(`
+          *,
+          categories(name, slug)
+        `)
+        .eq('supplier_id', supplier.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data as Product[];
+    },
+    enabled: !!user
   });
 };

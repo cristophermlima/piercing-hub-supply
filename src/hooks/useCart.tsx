@@ -1,237 +1,104 @@
 
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from './useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
-import { mockProducts } from '@/data/mockProducts';
+import { Product } from '@/hooks/useProducts';
 
 export interface CartItem {
   id: string;
-  user_id: string;
   product_id: string;
   quantity: number;
-  products: {
-    id: string;
-    name: string;
-    price: number;
-    sku: string;
-    brand: string;
-    image_urls: string[];
-    availability: string;
-    suppliers: {
-      company_name: string;
-    };
-  };
+  user_id: string;
+  created_at: string;
+  products: Product;
 }
 
-// Sistema de carrinho local para produtos mock
-const LOCAL_CART_KEY = 'piercer_hub_cart';
+interface CartContextType {
+  items: CartItem[];
+  addToCart: (productId: string, quantity?: number) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  removeFromCart: (itemId: string) => void;
+  clearCart: () => void;
+  totalItems: number;
+  totalPrice: number;
+  isLoading: boolean;
+}
 
-const getLocalCart = (userId: string): CartItem[] => {
-  try {
-    const stored = localStorage.getItem(`${LOCAL_CART_KEY}_${userId}`);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-};
+const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const setLocalCart = (userId: string, items: CartItem[]) => {
-  localStorage.setItem(`${LOCAL_CART_KEY}_${userId}`, JSON.stringify(items));
-};
-
-export const useCart = () => {
+export const CartProvider = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  return useQuery({
+  // Buscar itens do carrinho do banco de dados
+  const { data: items = [], isLoading } = useQuery({
     queryKey: ['cart', user?.id],
     queryFn: async () => {
       if (!user) return [];
-
-      try {
-        // Tentar buscar do banco de dados primeiro
-        const { data, error } = await supabase
-          .from('cart_items')
-          .select(`
-            *,
-            products(
-              id,
-              name,
-              price,
-              sku,
-              brand,
-              image_urls,
-              availability,
-              suppliers(company_name)
+      
+      const { data, error } = await supabase
+        .from('cart_items')
+        .select(`
+          *,
+          products (
+            id,
+            name,
+            description,
+            price,
+            image_urls,
+            suppliers (
+              company_name
             )
-          `)
-          .eq('user_id', user.id);
+          )
+        `)
+        .eq('user_id', user.id);
 
-        if (error && error.code !== '22P02') {
-          throw error;
-        }
-
-        // Se há dados no banco, retorna eles
-        if (data && data.length > 0) {
-          return data as CartItem[];
-        }
-
-        // Caso contrário, usar carrinho local com produtos mock
-        return getLocalCart(user.id);
-      } catch (error) {
-        console.log('Usando carrinho local para produtos demo');
-        return getLocalCart(user.id);
+      if (error) {
+        console.error('Erro ao buscar carrinho:', error);
+        throw error;
       }
+
+      return data as CartItem[];
     },
     enabled: !!user
   });
-};
 
-export const useAddToCart = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  return useMutation({
+  // Mutation para adicionar item ao carrinho
+  const addToCartMutation = useMutation({
     mutationFn: async ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => {
-      if (!user) throw new Error('User not authenticated');
+      if (!user) throw new Error('Usuário não autenticado');
 
-      // Verificar se é um produto mock
-      const isMockProduct = productId.startsWith('mock-');
-      
-      if (isMockProduct) {
-        // Gerenciar carrinho local para produtos mock
-        const mockProduct = mockProducts.find(p => p.id === productId);
-        if (!mockProduct) throw new Error('Produto não encontrado');
+      // Verificar se o item já existe no carrinho
+      const { data: existingItem } = await supabase
+        .from('cart_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('product_id', productId)
+        .single();
 
-        const localCart = getLocalCart(user.id);
-        const existingItemIndex = localCart.findIndex(item => item.product_id === productId);
-
-        let updatedCart;
-        if (existingItemIndex >= 0) {
-          // Atualizar quantidade do item existente
-          updatedCart = [...localCart];
-          updatedCart[existingItemIndex].quantity += quantity;
-        } else {
-          // Adicionar novo item
-          const newItem: CartItem = {
-            id: `cart-${Date.now()}-${Math.random()}`,
-            user_id: user.id,
-            product_id: productId,
-            quantity,
-            products: {
-              id: mockProduct.id,
-              name: mockProduct.name,
-              price: mockProduct.price,
-              sku: mockProduct.sku,
-              brand: mockProduct.brand,
-              image_urls: [mockProduct.image],
-              availability: mockProduct.availability,
-              suppliers: {
-                company_name: mockProduct.supplier
-              }
-            }
-          };
-          updatedCart = [...localCart, newItem];
-        }
-
-        setLocalCart(user.id, updatedCart);
-        return updatedCart;
-      } else {
-        // Tentar adicionar ao banco para produtos reais
-        const { data: existingItem } = await supabase
-          .from('cart_items')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('product_id', productId)
-          .single();
-
-        if (existingItem) {
-          const { data, error } = await supabase
-            .from('cart_items')
-            .update({ quantity: existingItem.quantity + quantity })
-            .eq('id', existingItem.id)
-            .select()
-            .single();
-
-          if (error) throw error;
-          return data;
-        } else {
-          const { data, error } = await supabase
-            .from('cart_items')
-            .insert({
-              user_id: user.id,
-              product_id: productId,
-              quantity
-            })
-            .select()
-            .single();
-
-          if (error) throw error;
-          return data;
-        }
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-      toast({
-        title: "Produto adicionado!",
-        description: "Item adicionado ao carrinho com sucesso.",
-      });
-    },
-    onError: (error) => {
-      console.error('Erro ao adicionar ao carrinho:', error);
-      toast({
-        title: "Erro ao adicionar ao carrinho",
-        description: "Não foi possível adicionar o item ao carrinho.",
-        variant: "destructive"
-      });
-    }
-  });
-};
-
-export const useUpdateCartItem = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
-      if (!user) return;
-
-      // Verificar se é item local
-      if (id.startsWith('cart-')) {
-        const localCart = getLocalCart(user.id);
-        
-        if (quantity <= 0) {
-          // Remover item
-          const updatedCart = localCart.filter(item => item.id !== id);
-          setLocalCart(user.id, updatedCart);
-          return null;
-        } else {
-          // Atualizar quantidade
-          const updatedCart = localCart.map(item =>
-            item.id === id ? { ...item, quantity } : item
-          );
-          setLocalCart(user.id, updatedCart);
-          return updatedCart.find(item => item.id === id);
-        }
-      } else {
-        // Item do banco de dados
-        if (quantity <= 0) {
-          const { error } = await supabase
-            .from('cart_items')
-            .delete()
-            .eq('id', id);
-
-          if (error) throw error;
-          return null;
-        }
-
+      if (existingItem) {
+        // Se existe, atualizar quantidade
         const { data, error } = await supabase
           .from('cart_items')
-          .update({ quantity })
-          .eq('id', id)
+          .update({ quantity: existingItem.quantity + quantity })
+          .eq('id', existingItem.id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        // Se não existe, criar novo item
+        const { data, error } = await supabase
+          .from('cart_items')
+          .insert({
+            user_id: user.id,
+            product_id: productId,
+            quantity
+          })
           .select()
           .single();
 
@@ -240,40 +107,144 @@ export const useUpdateCartItem = () => {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
-    }
-  });
-};
-
-export const useRemoveFromCart = () => {
-  const queryClient = useQueryClient();
-  const { user } = useAuth();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (id: string) => {
-      if (!user) return;
-
-      // Verificar se é item local
-      if (id.startsWith('cart-')) {
-        const localCart = getLocalCart(user.id);
-        const updatedCart = localCart.filter(item => item.id !== id);
-        setLocalCart(user.id, updatedCart);
-      } else {
-        const { error } = await supabase
-          .from('cart_items')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cart'] });
+      queryClient.invalidateQueries({ queryKey: ['cart', user?.id] });
       toast({
-        title: "Item removido",
-        description: "Produto removido do carrinho",
+        title: "Produto adicionado!",
+        description: "Item adicionado ao carrinho com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao adicionar ao carrinho:', error);
+      toast({
+        title: "Erro ao adicionar",
+        description: "Não foi possível adicionar o item ao carrinho.",
+        variant: "destructive"
       });
     }
   });
+
+  // Mutation para atualizar quantidade
+  const updateQuantityMutation = useMutation({
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      if (quantity <= 0) {
+        const { error } = await supabase
+          .from('cart_items')
+          .delete()
+          .eq('id', itemId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from('cart_items')
+          .update({ quantity })
+          .eq('id', itemId)
+          .select()
+          .single();
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart', user?.id] });
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar quantidade:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a quantidade.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation para remover item
+  const removeFromCartMutation = useMutation({
+    mutationFn: async (itemId: string) => {
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('id', itemId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart', user?.id] });
+      toast({
+        title: "Item removido",
+        description: "Item removido do carrinho.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao remover item:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o item.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Mutation para limpar carrinho
+  const clearCartMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) return;
+      
+      const { error } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cart', user?.id] });
+      toast({
+        title: "Carrinho limpo",
+        description: "Todos os itens foram removidos do carrinho.",
+      });
+    }
+  });
+
+  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalPrice = items.reduce((sum, item) => sum + (item.products.price * item.quantity), 0);
+
+  const contextValue: CartContextType = {
+    items,
+    addToCart: (productId: string, quantity = 1) => 
+      addToCartMutation.mutate({ productId, quantity }),
+    updateQuantity: (itemId: string, quantity: number) => 
+      updateQuantityMutation.mutate({ itemId, quantity }),
+    removeFromCart: (itemId: string) => 
+      removeFromCartMutation.mutate(itemId),
+    clearCart: () => clearCartMutation.mutate(),
+    totalItems,
+    totalPrice,
+    isLoading
+  };
+
+  return (
+    <CartContext.Provider value={contextValue}>
+      {children}
+    </CartContext.Provider>
+  );
+};
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (context === undefined) {
+    throw new Error('useCart must be used within a CartProvider');
+  }
+  return context;
+};
+
+export const useAddToCart = () => {
+  const { addToCart } = useCart();
+  const { user } = useAuth();
+  
+  return {
+    mutate: ({ productId, quantity = 1 }: { productId: string; quantity?: number }) => {
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+      addToCart(productId, quantity);
+    },
+    isPending: false // Simplificado para compatibilidade
+  };
 };
