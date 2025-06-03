@@ -12,27 +12,54 @@ import SupplierHeader from '@/components/SupplierHeader';
 
 const SupplierDashboard = () => {
   const { user } = useAuth();
-  const { data: profile } = useProfile();
+  const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: products = [], isLoading } = useSupplierProducts();
   const navigate = useNavigate();
+
+  console.log('User:', user);
+  console.log('Profile:', profile);
+  console.log('Profile loading:', profileLoading);
+
+  // Show loading while profile is being fetched
+  if (!user || profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Carregando...</h2>
+            <p className="text-gray-600">Verificando perfil do usuário...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Check if user is supplier - also check user metadata as fallback
+  const isSupplier = profile?.user_type === 'supplier' || user?.user_metadata?.user_type === 'supplier';
+
+  if (!isSupplier) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+            <p className="text-gray-600 mb-4">Esta área é exclusiva para fornecedores.</p>
+            <Button onClick={() => navigate('/marketplace')}>
+              Ir para Marketplace
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const totalProducts = products.length;
   const activeProducts = products.filter(p => p.is_active).length;
   const totalValue = products.reduce((sum, product) => sum + (product.price * product.stock_quantity), 0);
   const lowStockProducts = products.filter(product => product.stock_quantity < 10).length;
 
-  if (!user || profile?.user_type !== 'supplier') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-            <p className="text-gray-600">Esta área é exclusiva para fornecedores.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Get display name - prefer fantasy_name, then full_name from profile, then from user metadata
+  const displayName = profile?.fantasy_name || profile?.full_name || user?.user_metadata?.fantasy_name || user?.user_metadata?.full_name || 'Fornecedor';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -43,7 +70,7 @@ const SupplierDashboard = () => {
           <div>
             <h1 className="text-3xl font-bold">Dashboard</h1>
             <p className="text-gray-600 mt-2">
-              Bem-vindo, {profile?.fantasy_name || profile?.full_name}
+              Bem-vindo, {displayName}
             </p>
           </div>
           <Button 

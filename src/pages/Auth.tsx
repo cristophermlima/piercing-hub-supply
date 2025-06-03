@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -18,7 +17,15 @@ const Auth = () => {
   // Redirect if already authenticated
   useEffect(() => {
     if (user) {
-      navigate('/marketplace');
+      // Check user type and redirect accordingly
+      const userType = user.user_metadata?.user_type;
+      console.log('User authenticated, user type:', userType);
+      
+      if (userType === 'supplier') {
+        navigate('/dashboard');
+      } else {
+        navigate('/marketplace');
+      }
     }
   }, [user, navigate]);
 
@@ -68,12 +75,7 @@ const Auth = () => {
 
     setIsLoading(false);
 
-    // Após login bem-sucedido, redireciona para marketplace
-    if (!result.error) {
-      setTimeout(() => {
-        navigate('/marketplace');
-      }, 1000);
-    }
+    // O redirecionamento será tratado pelo useEffect quando o user for atualizado
   };
 
   return (
