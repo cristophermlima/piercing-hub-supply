@@ -14,7 +14,7 @@ import SupplierHeader from '@/components/SupplierHeader';
 
 const SupplierProducts = () => {
   const { user } = useAuth();
-  const { data: profile } = useProfile();
+  const { data: profile, isLoading: profileLoading } = useProfile();
   const { data: products = [], isLoading } = useSupplierProducts();
   const deleteProduct = useDeleteProduct();
   const toggleStatus = useToggleProductStatus();
@@ -22,6 +22,43 @@ const SupplierProducts = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  console.log('SupplierProducts - User:', user);
+  console.log('SupplierProducts - Profile:', profile);
+  console.log('SupplierProducts - Profile loading:', profileLoading);
+
+  // Show loading while profile is being fetched
+  if (!user || profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Carregando...</h2>
+            <p className="text-gray-600">Verificando perfil do usuário...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Check if user is supplier - use user metadata as fallback
+  const isSupplier = profile?.user_type === 'supplier' || user?.user_metadata?.user_type === 'supplier';
+
+  if (!isSupplier) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
+            <p className="text-gray-600 mb-4">Esta área é exclusiva para fornecedores.</p>
+            <Button onClick={() => window.location.href = '/marketplace'}>
+              Ir para Marketplace
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const filteredProducts = products.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -45,19 +82,6 @@ const SupplierProducts = () => {
       console.error('Erro ao alterar status do produto:', error);
     }
   };
-
-  if (!user || profile?.user_type !== 'supplier') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardContent className="pt-6 text-center">
-            <h2 className="text-xl font-semibold mb-2">Acesso Restrito</h2>
-            <p className="text-gray-600">Esta área é exclusiva para fornecedores.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

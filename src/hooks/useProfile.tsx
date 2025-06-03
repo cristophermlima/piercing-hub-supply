@@ -24,15 +24,24 @@ export const useProfile = () => {
     queryFn: async () => {
       if (!user) return null;
 
+      console.log('Fetching profile for user:', user.id);
+
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching profile:', error);
+        throw error;
+      }
+
+      console.log('Profile data received:', data);
       return data as Profile;
     },
-    enabled: !!user
+    enabled: !!user,
+    retry: 1,
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
 };
