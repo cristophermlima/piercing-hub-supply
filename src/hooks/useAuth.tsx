@@ -22,6 +22,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
@@ -33,78 +35,135 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    const getInitialSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Error getting initial session:', error);
+        } else {
+          console.log('Initial session:', session);
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+      } catch (error) {
+        console.error('Error in getInitialSession:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, userData: any) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: userData
-      }
-    });
-
-    if (error) {
-      toast({
-        title: "Erro no cadastro",
-        description: error.message,
-        variant: "destructive"
+    try {
+      console.log('Attempting signup with:', { email, userData });
+      
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: userData
+        }
       });
-      return { error };
-    } else {
+
+      console.log('Signup response:', { data, error });
+
+      if (error) {
+        console.error('Signup error:', error);
+        toast({
+          title: "Erro no cadastro",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { error };
+      }
+
+      if (data.user && !data.session) {
+        toast({
+          title: "Cadastro realizado!",
+          description: "Verifique seu email para confirmar a conta.",
+        });
+        return { error: null, needsRedirect: false };
+      }
+
       toast({
         title: "Cadastro realizado!",
         description: "Conta criada com sucesso. Redirecionando...",
       });
       
-      // Retorna informações para redirecionamento
       return { 
         error: null, 
         needsRedirect: true, 
         userType: userData.user_type 
       };
+    } catch (error) {
+      console.error('Unexpected error in signup:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns momentos.",
+        variant: "destructive"
+      });
+      return { error };
     }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      toast({
-        title: "Erro no login",
-        description: error.message,
-        variant: "destructive"
+    try {
+      console.log('Attempting signin with:', email);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
       });
-    } else {
+
+      console.log('Signin response:', { data, error });
+
+      if (error) {
+        console.error('Signin error:', error);
+        toast({
+          title: "Erro no login",
+          description: error.message,
+          variant: "destructive"
+        });
+        return { error };
+      }
+
       toast({
         title: "Login realizado!",
         description: "Bem-vindo ao PiercerHub!",
       });
-    }
 
-    return { error };
+      return { error: null };
+    } catch (error) {
+      console.error('Unexpected error in signin:', error);
+      toast({
+        title: "Erro inesperado",
+        description: "Tente novamente em alguns momentos.",
+        variant: "destructive"
+      });
+      return { error };
+    }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (!error) {
-      toast({
-        title: "Logout realizado",
-        description: "Até logo!",
-      });
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Signout error:', error);
+      } else {
+        toast({
+          title: "Logout realizado",
+          description: "Até logo!",
+        });
+      }
+    } catch (error) {
+      console.error('Unexpected error in signout:', error);
     }
   };
 
