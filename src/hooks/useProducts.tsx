@@ -65,6 +65,8 @@ export const useAddProduct = () => {
     mutationFn: async (productData: Omit<Product, 'id' | 'suppliers' | 'categories'>) => {
       if (!user) throw new Error('Usuário não autenticado');
 
+      console.log('Tentando adicionar produto para usuário:', user.id);
+
       // Buscar o supplier_id do usuário atual
       const { data: supplier, error: supplierError } = await supabase
         .from('suppliers')
@@ -72,9 +74,16 @@ export const useAddProduct = () => {
         .eq('user_id', user.id)
         .single();
 
-      if (supplierError || !supplier) {
+      if (supplierError) {
+        console.error('Erro ao buscar supplier:', supplierError);
         throw new Error('Usuário não é um fornecedor válido');
       }
+
+      if (!supplier) {
+        throw new Error('Fornecedor não encontrado');
+      }
+
+      console.log('Supplier encontrado:', supplier.id);
 
       const { data, error } = await supabase
         .from('products')
@@ -85,7 +94,12 @@ export const useAddProduct = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao inserir produto:', error);
+        throw error;
+      }
+      
+      console.log('Produto inserido com sucesso:', data);
       return data;
     },
     onSuccess: () => {
@@ -218,16 +232,33 @@ export const useSupplierProducts = () => {
   return useQuery({
     queryKey: ['supplier-products', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('Nenhum usuário autenticado');
+        return [];
+      }
 
+      console.log('Buscando produtos para usuário:', user.id);
+
+      // Primeiro buscar o supplier
       const { data: supplier, error: supplierError } = await supabase
         .from('suppliers')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
-      if (supplierError || !supplier) return [];
+      if (supplierError) {
+        console.error('Erro ao buscar supplier:', supplierError);
+        return [];
+      }
 
+      if (!supplier) {
+        console.log('Supplier não encontrado para o usuário:', user.id);
+        return [];
+      }
+
+      console.log('Supplier encontrado:', supplier.id);
+
+      // Buscar produtos do supplier
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -237,9 +268,121 @@ export const useSupplierProducts = () => {
         .eq('supplier_id', supplier.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro ao buscar produtos do supplier:', error);
+        throw error;
+      }
+
+      console.log('Produtos encontrados:', data?.length || 0);
       return data as Product[];
     },
-    enabled: !!user
+    enabled: !!user,
+    refetchOnWindowFocus: true,
+    staleTime: 0 // Força a busca sempre que necessário
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (productData: Partial<Product> & { id: string }) => {
+      const { id, ...updateData } = productData;
+      
+      const { data, error } = await supabase
+        .from('products')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      toast({
+        title: "Produto atualizado!",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao atualizar produto:', error);
+      toast({
+        title: "Erro ao atualizar produto",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useDeleteProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (productId: string) => {
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', productId);
+
+      if (error) throw error;
+      return productId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      toast({
+        title: "Produto excluído!",
+        description: "O produto foi removido do catálogo.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao excluir produto:', error);
+      toast({
+        title: "Erro ao excluir produto",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useToggleProductStatus = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async ({ productId, isActive }: { productId: string; isActive: boolean }) => {
+      const { data, error } = await supabase
+        .from('products')
+        .update({ is_active: isActive })
+        .eq('id', productId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      toast({
+        title: data.is_active ? "Produto ativado!" : "Produto desativado!",
+        description: data.is_active ? "O produto está visível no marketplace." : "O produto foi ocultado do marketplace.",
+      });
+    },
+    onError: (error) => {
+      console.error('Erro ao alterar status do produto:', error);
+      toast({
+        title: "Erro ao alterar status",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 };

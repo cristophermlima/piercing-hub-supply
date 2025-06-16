@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSupplierProducts, useDeleteProduct, useToggleProductStatus } from '@/hooks/useProducts';
@@ -15,7 +15,7 @@ import SupplierHeader from '@/components/SupplierHeader';
 const SupplierProducts = () => {
   const { user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: products = [], isLoading } = useSupplierProducts();
+  const { data: products = [], isLoading, refetch, isRefetching } = useSupplierProducts();
   const deleteProduct = useDeleteProduct();
   const toggleStatus = useToggleProductStatus();
   
@@ -25,7 +25,14 @@ const SupplierProducts = () => {
 
   console.log('SupplierProducts - User:', user);
   console.log('SupplierProducts - Profile:', profile);
-  console.log('SupplierProducts - Profile loading:', profileLoading);
+  console.log('SupplierProducts - Products:', products);
+
+  // Força reload quando o modal de adicionar é fechado
+  useEffect(() => {
+    if (!isAddModalOpen) {
+      refetch();
+    }
+  }, [isAddModalOpen, refetch]);
 
   // Show loading only if user is not available
   if (!user) {
@@ -72,6 +79,7 @@ const SupplierProducts = () => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
       try {
         await deleteProduct.mutateAsync(productId);
+        refetch(); // Force refresh after delete
       } catch (error) {
         console.error('Erro ao excluir produto:', error);
       }
@@ -81,9 +89,14 @@ const SupplierProducts = () => {
   const handleToggleStatus = async (productId: string, currentStatus: boolean) => {
     try {
       await toggleStatus.mutateAsync({ productId, isActive: !currentStatus });
+      refetch(); // Force refresh after status change
     } catch (error) {
       console.error('Erro ao alterar status do produto:', error);
     }
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   return (
@@ -98,13 +111,23 @@ const SupplierProducts = () => {
               Gerencie seu catálogo de produtos
             </p>
           </div>
-          <Button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Novo Produto
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleRefresh}
+              disabled={isRefetching}
+              variant="outline"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isRefetching ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+            <Button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Novo Produto
+            </Button>
+          </div>
         </div>
 
         {/* Filtros e Busca */}
@@ -242,7 +265,10 @@ const SupplierProducts = () => {
         <AddProductModal 
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
-          onSuccess={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            setIsAddModalOpen(false);
+            refetch(); // Force refresh after adding product
+          }}
         />
 
         {editingProduct && (
@@ -250,7 +276,10 @@ const SupplierProducts = () => {
             isOpen={true}
             product={editingProduct}
             onClose={() => setEditingProduct(null)}
-            onSuccess={() => setEditingProduct(null)}
+            onSuccess={() => {
+              setEditingProduct(null);
+              refetch(); // Force refresh after editing product
+            }}
           />
         )}
       </div>
