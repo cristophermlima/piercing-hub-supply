@@ -90,7 +90,6 @@ const SupplierProducts = () => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
       try {
         await deleteProduct.mutateAsync(productId);
-        refetch();
       } catch (error) {
         console.error('Erro ao excluir produto:', error);
       }
@@ -100,7 +99,6 @@ const SupplierProducts = () => {
   const handleToggleStatus = async (productId: string, currentStatus: boolean) => {
     try {
       await toggleStatus.mutateAsync({ productId, isActive: !currentStatus });
-      refetch();
     } catch (error) {
       console.error('Erro ao alterar status do produto:', error);
     }
@@ -112,7 +110,10 @@ const SupplierProducts = () => {
 
   const handleModalSuccess = () => {
     setIsAddModalOpen(false);
-    refetch();
+    // Dar um pequeno delay para garantir que o produto foi inserido antes de refetch
+    setTimeout(() => {
+      refetch();
+    }, 500);
   };
 
   const handleEditSuccess = () => {
