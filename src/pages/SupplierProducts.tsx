@@ -23,17 +23,24 @@ const SupplierProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  console.log('📱 SupplierProducts - Auth loading:', authLoading);
-  console.log('👤 SupplierProducts - User:', user?.id);
-  console.log('👔 SupplierProducts - Profile:', profile?.user_type);
-  console.log('📦 SupplierProducts - Products count:', products?.length);
-  console.log('⚠️ SupplierProducts - Products error:', productsError);
-  console.log('🔄 SupplierProducts - Is loading:', productsLoading);
+  console.log('📱 [SUPPLIER PRODUCTS PAGE] Render - Auth loading:', authLoading);
+  console.log('👤 [SUPPLIER PRODUCTS PAGE] User ID:', user?.id);
+  console.log('👔 [SUPPLIER PRODUCTS PAGE] Profile tipo:', profile?.user_type);
+  console.log('📦 [SUPPLIER PRODUCTS PAGE] Products count:', products?.length);
+  console.log('⚠️ [SUPPLIER PRODUCTS PAGE] Products error:', productsError);
+  console.log('🔄 [SUPPLIER PRODUCTS PAGE] Is loading:', productsLoading);
+  console.log('🔄 [SUPPLIER PRODUCTS PAGE] Is refetching:', isRefetching);
 
-  // Log detalhado dos produtos
+  // Log detalhado dos produtos sempre que mudar
   useEffect(() => {
+    console.log('🔄 [SUPPLIER PRODUCTS PAGE] useEffect - products changed');
     if (products && products.length > 0) {
-      console.log('📋 Lista detalhada de produtos:', products);
+      console.log('📋 [SUPPLIER PRODUCTS PAGE] Lista atual de produtos:');
+      products.forEach((product, index) => {
+        console.log(`   ${index + 1}. ${product.name} (ID: ${product.id}) - SKU: ${product.sku} - Ativo: ${product.is_active}`);
+      });
+    } else {
+      console.log('📋 [SUPPLIER PRODUCTS PAGE] Lista de produtos está vazia');
     }
   }, [products]);
 
@@ -72,7 +79,7 @@ const SupplierProducts = () => {
   const userType = profile?.user_type || user?.user_metadata?.user_type;
   const isSupplier = userType === 'supplier';
 
-  console.log('🔐 SupplierProducts - User type:', userType, 'Is supplier:', isSupplier);
+  console.log('🔐 [SUPPLIER PRODUCTS PAGE] User type:', userType, 'Is supplier:', isSupplier);
 
   if (!isSupplier) {
     return (
@@ -114,16 +121,20 @@ const SupplierProducts = () => {
   };
 
   const handleRefresh = () => {
-    console.log('🔄 Refreshing products...');
+    console.log('🔄 [SUPPLIER PRODUCTS PAGE] Manual refresh solicitado');
     refetch();
   };
 
   const handleModalSuccess = () => {
-    console.log('🎉 Modal success - fechando modal e atualizando lista');
+    console.log('🎉 [SUPPLIER PRODUCTS PAGE] Modal success - produto foi adicionado');
     setIsAddModalOpen(false);
-    // Dar um pequeno delay para garantir que o produto foi inserido antes de refetch
+    
+    // Log antes do timeout
+    console.log('⏰ [SUPPLIER PRODUCTS PAGE] Configurando timeout para refetch...');
+    
+    // Dar um pequeno delay para garantir que o produto foi inserido
     setTimeout(() => {
-      console.log('⏰ Timeout executado, fazendo refetch...');
+      console.log('⏰ [SUPPLIER PRODUCTS PAGE] Timeout executado, fazendo refetch manual...');
       refetch();
     }, 1000);
   };
@@ -155,7 +166,10 @@ const SupplierProducts = () => {
               Atualizar
             </Button>
             <Button 
-              onClick={() => setIsAddModalOpen(true)}
+              onClick={() => {
+                console.log('➕ [SUPPLIER PRODUCTS PAGE] Abrindo modal de adicionar produto');
+                setIsAddModalOpen(true);
+              }}
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
@@ -164,17 +178,21 @@ const SupplierProducts = () => {
           </div>
         </div>
 
-        {/* Debug Info */}
+        {/* Debug Info Expandido */}
         {process.env.NODE_ENV === 'development' && (
           <Card className="mb-6 bg-yellow-50 border-yellow-200">
             <CardContent className="pt-6">
-              <h3 className="font-semibold mb-2">Debug Info:</h3>
+              <h3 className="font-semibold mb-2">Debug Info Detalhado:</h3>
               <div className="text-sm space-y-1">
-                <p>User ID: {user?.id}</p>
-                <p>Loading: {productsLoading ? 'Yes' : 'No'}</p>
-                <p>Products Count: {products?.length || 0}</p>
-                <p>Error: {productsError ? 'Yes' : 'No'}</p>
-                {productsError && <p className="text-red-600">Error: {JSON.stringify(productsError)}</p>}
+                <p><strong>User ID:</strong> {user?.id}</p>
+                <p><strong>Loading:</strong> {productsLoading ? 'Yes' : 'No'}</p>
+                <p><strong>Refetching:</strong> {isRefetching ? 'Yes' : 'No'}</p>
+                <p><strong>Products Count:</strong> {products?.length || 0}</p>
+                <p><strong>Products Array:</strong> {Array.isArray(products) ? 'Yes' : 'No'}</p>
+                <p><strong>Error:</strong> {productsError ? 'Yes' : 'No'}</p>
+                {productsError && <p className="text-red-600"><strong>Error Details:</strong> {JSON.stringify(productsError, null, 2)}</p>}
+                <p><strong>Filtered Products:</strong> {filteredProducts?.length || 0}</p>
+                <p><strong>Modal Open:</strong> {isAddModalOpen ? 'Yes' : 'No'}</p>
               </div>
             </CardContent>
           </Card>
@@ -238,7 +256,10 @@ const SupplierProducts = () => {
                 </p>
                 {products.length === 0 && (
                   <Button 
-                    onClick={() => setIsAddModalOpen(true)}
+                    onClick={() => {
+                      console.log('➕ [SUPPLIER PRODUCTS PAGE] Abrindo modal via empty state');
+                      setIsAddModalOpen(true);
+                    }}
                     className="bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -329,7 +350,10 @@ const SupplierProducts = () => {
         {/* Modais */}
         <AddProductModal 
           isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
+          onClose={() => {
+            console.log('❌ [SUPPLIER PRODUCTS PAGE] Fechando modal de adicionar produto');
+            setIsAddModalOpen(false);
+          }}
           onSuccess={handleModalSuccess}
         />
 

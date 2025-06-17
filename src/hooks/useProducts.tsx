@@ -146,13 +146,13 @@ export const useAddProduct = () => {
     mutationFn: async (productData: Omit<Product, 'id' | 'suppliers' | 'categories'>) => {
       if (!user) throw new Error('Usuário não autenticado');
 
-      console.log('🚀 Tentando adicionar produto para usuário:', user.id);
-      console.log('📦 Dados do produto:', productData);
+      console.log('🚀 [ADICIONAR PRODUTO] Iniciando processo para usuário:', user.id);
+      console.log('📦 [ADICIONAR PRODUTO] Dados do produto:', productData);
 
       // Garantir que o supplier existe
       const supplier = await ensureSupplierExists(user);
 
-      console.log('💾 Inserindo produto com supplier_id:', supplier.id);
+      console.log('💾 [ADICIONAR PRODUTO] Inserindo produto com supplier_id:', supplier.id);
 
       const { data, error } = await supabase
         .from('products')
@@ -168,24 +168,32 @@ export const useAddProduct = () => {
         .single();
 
       if (error) {
-        console.error('❌ Erro ao inserir produto:', error);
+        console.error('❌ [ADICIONAR PRODUTO] Erro ao inserir produto:', error);
         throw error;
       }
       
-      console.log('✅ Produto inserido com sucesso:', data);
+      console.log('✅ [ADICIONAR PRODUTO] Produto inserido com sucesso:', data);
+      console.log('🔍 [ADICIONAR PRODUTO] Dados completos do produto inserido:', JSON.stringify(data, null, 2));
+      
       return data;
     },
     onSuccess: (data) => {
-      console.log('🎉 Produto adicionado com sucesso, invalidando queries...');
+      console.log('🎉 [ADICIONAR PRODUTO] onSuccess chamado com produto:', data);
+      console.log('🔄 [ADICIONAR PRODUTO] Invalidando queries...');
       
-      // Invalidar todas as queries relacionadas a produtos
+      // Primeiro invalidar as queries
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
+      queryClient.invalidateQueries({ queryKey: ['supplier-products', user?.id] });
       
-      // Forçar um refetch imediato das queries específicas
-      queryClient.refetchQueries({ queryKey: ['supplier-products', user?.id] });
+      console.log('⏰ [ADICIONAR PRODUTO] Aguardando 500ms antes do refetch...');
       
-      console.log('🔄 Queries invalidadas e refetch iniciado');
+      // Aguardar um pouco e depois forçar refetch
+      setTimeout(() => {
+        console.log('🔄 [ADICIONAR PRODUTO] Forçando refetch das queries...');
+        queryClient.refetchQueries({ queryKey: ['supplier-products', user?.id] });
+        queryClient.refetchQueries({ queryKey: ['products'] });
+      }, 500);
       
       toast({
         title: "Produto adicionado!",
@@ -193,7 +201,7 @@ export const useAddProduct = () => {
       });
     },
     onError: (error) => {
-      console.error('❌ Erro ao adicionar produto:', error);
+      console.error('❌ [ADICIONAR PRODUTO] Erro no onError:', error);
       toast({
         title: "Erro ao adicionar produto",
         description: error.message,
@@ -315,17 +323,17 @@ export const useSupplierProducts = () => {
     queryKey: ['supplier-products', user?.id],
     queryFn: async () => {
       if (!user) {
-        console.log('❌ Nenhum usuário autenticado para buscar produtos');
+        console.log('❌ [SUPPLIER PRODUCTS] Nenhum usuário autenticado');
         return [];
       }
 
-      console.log('🔍 Buscando produtos para usuário:', user.id);
+      console.log('🔍 [SUPPLIER PRODUCTS] Iniciando busca de produtos para usuário:', user.id);
 
       try {
         // Garantir que o supplier existe
         const supplier = await ensureSupplierExists(user);
 
-        console.log('🏢 Buscando produtos do supplier:', supplier.id);
+        console.log('🏢 [SUPPLIER PRODUCTS] Buscando produtos do supplier:', supplier.id);
 
         // Buscar produtos do supplier
         const { data, error } = await supabase
@@ -337,25 +345,34 @@ export const useSupplierProducts = () => {
           .eq('supplier_id', supplier.id)
           .order('created_at', { ascending: false });
 
-        console.log('📊 Resultado da query de produtos:', { data, error });
+        console.log('📊 [SUPPLIER PRODUCTS] Resultado da query:', { data, error });
 
         if (error) {
-          console.error('❌ Erro ao buscar produtos do supplier:', error);
+          console.error('❌ [SUPPLIER PRODUCTS] Erro ao buscar produtos:', error);
           throw error;
         }
 
-        console.log(`✅ ${data?.length || 0} produtos encontrados para o supplier`);
-        console.log('📋 Produtos:', data);
+        console.log(`✅ [SUPPLIER PRODUCTS] ${data?.length || 0} produtos encontrados`);
+        
+        if (data && data.length > 0) {
+          console.log('📋 [SUPPLIER PRODUCTS] Produtos detalhados:');
+          data.forEach((product, index) => {
+            console.log(`   ${index + 1}. ${product.name} (ID: ${product.id}) - SKU: ${product.sku}`);
+          });
+        } else {
+          console.log('📋 [SUPPLIER PRODUCTS] Nenhum produto encontrado para este supplier');
+        }
         
         return data as Product[];
       } catch (error) {
-        console.error('💥 Erro geral ao buscar produtos do supplier:', error);
+        console.error('💥 [SUPPLIER PRODUCTS] Erro geral:', error);
         return [];
       }
     },
     enabled: !!user,
     retry: 1,
     refetchOnWindowFocus: false,
-    staleTime: 0
+    staleTime: 0,
+    gcTime: 0
   });
 };
