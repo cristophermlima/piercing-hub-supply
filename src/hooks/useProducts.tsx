@@ -67,23 +67,40 @@ export const useAddProduct = () => {
 
       console.log('Tentando adicionar produto para usuário:', user.id);
 
-      // Buscar o supplier_id do usuário atual
-      const { data: supplier, error: supplierError } = await supabase
+      // Buscar o supplier_id do usuário atual ou criar se não existir
+      let { data: supplier, error: supplierError } = await supabase
         .from('suppliers')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (supplierError) {
+      if (supplierError && supplierError.code !== 'PGRST116') {
         console.error('Erro ao buscar supplier:', supplierError);
-        throw new Error('Usuário não é um fornecedor válido');
+        throw new Error('Erro ao verificar fornecedor');
       }
 
+      // Se não existe supplier, criar um
       if (!supplier) {
-        throw new Error('Fornecedor não encontrado');
+        console.log('Supplier não encontrado, criando novo...');
+        const { data: newSupplier, error: createError } = await supabase
+          .from('suppliers')
+          .insert({
+            user_id: user.id,
+            company_name: user.user_metadata?.fantasy_name || user.user_metadata?.full_name || 'Fornecedor'
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          console.error('Erro ao criar supplier:', createError);
+          throw new Error('Erro ao criar fornecedor');
+        }
+
+        supplier = newSupplier;
+        console.log('Supplier criado com sucesso:', supplier.id);
       }
 
-      console.log('Supplier encontrado:', supplier.id);
+      console.log('Supplier encontrado/criado:', supplier.id);
 
       const { data, error } = await supabase
         .from('products')
@@ -239,24 +256,40 @@ export const useSupplierProducts = () => {
 
       console.log('Buscando produtos para usuário:', user.id);
 
-      // Primeiro buscar o supplier
-      const { data: supplier, error: supplierError } = await supabase
+      // Primeiro buscar o supplier ou criar se não existir
+      let { data: supplier, error: supplierError } = await supabase
         .from('suppliers')
         .select('id')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
 
-      if (supplierError) {
+      if (supplierError && supplierError.code !== 'PGRST116') {
         console.error('Erro ao buscar supplier:', supplierError);
         return [];
       }
 
+      // Se não existe supplier, criar um
       if (!supplier) {
-        console.log('Supplier não encontrado para o usuário:', user.id);
-        return [];
+        console.log('Supplier não encontrado, criando novo...');
+        const { data: newSupplier, error: createError } = await supabase
+          .from('suppliers')
+          .insert({
+            user_id: user.id,
+            company_name: user.user_metadata?.fantasy_name || user.user_metadata?.full_name || 'Fornecedor'
+          })
+          .select('id')
+          .single();
+
+        if (createError) {
+          console.error('Erro ao criar supplier:', createError);
+          return [];
+        }
+
+        supplier = newSupplier;
+        console.log('Supplier criado automaticamente:', supplier.id);
       }
 
-      console.log('Supplier encontrado:', supplier.id);
+      console.log('Supplier encontrado/criado:', supplier.id);
 
       // Buscar produtos do supplier
       const { data, error } = await supabase
