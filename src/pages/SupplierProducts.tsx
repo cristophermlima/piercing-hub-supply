@@ -15,7 +15,7 @@ import SupplierHeader from '@/components/SupplierHeader';
 const SupplierProducts = () => {
   const { user, loading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: products = [], isLoading: productsLoading, refetch, isRefetching } = useSupplierProducts();
+  const { data: products = [], isLoading: productsLoading, refetch, isRefetching, error: productsError } = useSupplierProducts();
   const deleteProduct = useDeleteProduct();
   const toggleStatus = useToggleProductStatus();
   
@@ -23,10 +23,19 @@ const SupplierProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  console.log('SupplierProducts - Auth loading:', authLoading);
-  console.log('SupplierProducts - User:', user);
-  console.log('SupplierProducts - Profile:', profile);
-  console.log('SupplierProducts - Products:', products);
+  console.log('📱 SupplierProducts - Auth loading:', authLoading);
+  console.log('👤 SupplierProducts - User:', user?.id);
+  console.log('👔 SupplierProducts - Profile:', profile?.user_type);
+  console.log('📦 SupplierProducts - Products count:', products?.length);
+  console.log('⚠️ SupplierProducts - Products error:', productsError);
+  console.log('🔄 SupplierProducts - Is loading:', productsLoading);
+
+  // Log detalhado dos produtos
+  useEffect(() => {
+    if (products && products.length > 0) {
+      console.log('📋 Lista detalhada de produtos:', products);
+    }
+  }, [products]);
 
   // Show loading while authentication is being checked
   if (authLoading) {
@@ -63,7 +72,7 @@ const SupplierProducts = () => {
   const userType = profile?.user_type || user?.user_metadata?.user_type;
   const isSupplier = userType === 'supplier';
 
-  console.log('SupplierProducts - User type:', userType, 'Is supplier:', isSupplier);
+  console.log('🔐 SupplierProducts - User type:', userType, 'Is supplier:', isSupplier);
 
   if (!isSupplier) {
     return (
@@ -105,15 +114,18 @@ const SupplierProducts = () => {
   };
 
   const handleRefresh = () => {
+    console.log('🔄 Refreshing products...');
     refetch();
   };
 
   const handleModalSuccess = () => {
+    console.log('🎉 Modal success - fechando modal e atualizando lista');
     setIsAddModalOpen(false);
     // Dar um pequeno delay para garantir que o produto foi inserido antes de refetch
     setTimeout(() => {
+      console.log('⏰ Timeout executado, fazendo refetch...');
       refetch();
-    }, 500);
+    }, 1000);
   };
 
   const handleEditSuccess = () => {
@@ -130,7 +142,7 @@ const SupplierProducts = () => {
           <div>
             <h1 className="text-3xl font-bold">Meus Produtos</h1>
             <p className="text-gray-600 mt-1">
-              Gerencie seu catálogo de produtos
+              Gerencie seu catálogo de produtos ({products.length} produtos)
             </p>
           </div>
           <div className="flex gap-2">
@@ -151,6 +163,22 @@ const SupplierProducts = () => {
             </Button>
           </div>
         </div>
+
+        {/* Debug Info */}
+        {process.env.NODE_ENV === 'development' && (
+          <Card className="mb-6 bg-yellow-50 border-yellow-200">
+            <CardContent className="pt-6">
+              <h3 className="font-semibold mb-2">Debug Info:</h3>
+              <div className="text-sm space-y-1">
+                <p>User ID: {user?.id}</p>
+                <p>Loading: {productsLoading ? 'Yes' : 'No'}</p>
+                <p>Products Count: {products?.length || 0}</p>
+                <p>Error: {productsError ? 'Yes' : 'No'}</p>
+                {productsError && <p className="text-red-600">Error: {JSON.stringify(productsError)}</p>}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Filtros e Busca */}
         <Card className="mb-6">
@@ -179,6 +207,20 @@ const SupplierProducts = () => {
               <div className="text-center py-12">
                 <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-500">Carregando produtos...</p>
+              </div>
+            ) : productsError ? (
+              <div className="text-center py-12">
+                <div className="text-red-400 mb-4">
+                  <h3 className="text-lg font-medium text-red-900 mb-2">
+                    Erro ao carregar produtos
+                  </h3>
+                  <p className="text-red-600 mb-4">
+                    {productsError.message || 'Erro desconhecido'}
+                  </p>
+                  <Button onClick={handleRefresh} variant="outline">
+                    Tentar Novamente
+                  </Button>
+                </div>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div className="text-center py-12">
