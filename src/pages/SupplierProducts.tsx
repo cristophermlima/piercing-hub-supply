@@ -13,9 +13,9 @@ import EditProductModal from '@/components/EditProductModal';
 import SupplierHeader from '@/components/SupplierHeader';
 
 const SupplierProducts = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
-  const { data: products = [], isLoading, refetch, isRefetching } = useSupplierProducts();
+  const { data: products = [], isLoading: productsLoading, refetch, isRefetching } = useSupplierProducts();
   const deleteProduct = useDeleteProduct();
   const toggleStatus = useToggleProductStatus();
   
@@ -23,25 +23,36 @@ const SupplierProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  console.log('SupplierProducts - Auth loading:', authLoading);
   console.log('SupplierProducts - User:', user);
   console.log('SupplierProducts - Profile:', profile);
   console.log('SupplierProducts - Products:', products);
 
-  // Força reload quando o modal de adicionar é fechado
-  useEffect(() => {
-    if (!isAddModalOpen) {
-      refetch();
-    }
-  }, [isAddModalOpen, refetch]);
-
-  // Show loading only if user is not available
-  if (!user) {
+  // Show loading while authentication is being checked
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <h2 className="text-xl font-semibold mb-2">Carregando...</h2>
             <p className="text-gray-600">Verificando autenticação...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error if user is not available after loading
+  if (!authLoading && !user) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardContent className="pt-6 text-center">
+            <h2 className="text-xl font-semibold mb-2">Não Autenticado</h2>
+            <p className="text-gray-600 mb-4">Você precisa fazer login para acessar esta página.</p>
+            <Button onClick={() => window.location.href = '/auth'}>
+              Fazer Login
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -79,7 +90,7 @@ const SupplierProducts = () => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
       try {
         await deleteProduct.mutateAsync(productId);
-        refetch(); // Force refresh after delete
+        refetch();
       } catch (error) {
         console.error('Erro ao excluir produto:', error);
       }
@@ -89,13 +100,23 @@ const SupplierProducts = () => {
   const handleToggleStatus = async (productId: string, currentStatus: boolean) => {
     try {
       await toggleStatus.mutateAsync({ productId, isActive: !currentStatus });
-      refetch(); // Force refresh after status change
+      refetch();
     } catch (error) {
       console.error('Erro ao alterar status do produto:', error);
     }
   };
 
   const handleRefresh = () => {
+    refetch();
+  };
+
+  const handleModalSuccess = () => {
+    setIsAddModalOpen(false);
+    refetch();
+  };
+
+  const handleEditSuccess = () => {
+    setEditingProduct(null);
     refetch();
   };
 
@@ -153,8 +174,9 @@ const SupplierProducts = () => {
         {/* Lista de Produtos */}
         <Card>
           <CardContent className="p-0">
-            {isLoading ? (
+            {productsLoading ? (
               <div className="text-center py-12">
+                <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-400" />
                 <p className="text-gray-500">Carregando produtos...</p>
               </div>
             ) : filteredProducts.length === 0 ? (
@@ -265,10 +287,7 @@ const SupplierProducts = () => {
         <AddProductModal 
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
-          onSuccess={() => {
-            setIsAddModalOpen(false);
-            refetch(); // Force refresh after adding product
-          }}
+          onSuccess={handleModalSuccess}
         />
 
         {editingProduct && (
@@ -276,10 +295,7 @@ const SupplierProducts = () => {
             isOpen={true}
             product={editingProduct}
             onClose={() => setEditingProduct(null)}
-            onSuccess={() => {
-              setEditingProduct(null);
-              refetch(); // Force refresh after editing product
-            }}
+            onSuccess={handleEditSuccess}
           />
         )}
       </div>

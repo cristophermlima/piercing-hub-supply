@@ -250,67 +250,73 @@ export const useSupplierProducts = () => {
     queryKey: ['supplier-products', user?.id],
     queryFn: async () => {
       if (!user) {
-        console.log('Nenhum usuário autenticado');
+        console.log('Nenhum usuário autenticado para buscar produtos');
         return [];
       }
 
       console.log('Buscando produtos para usuário:', user.id);
 
-      // Primeiro buscar o supplier ou criar se não existir
-      let { data: supplier, error: supplierError } = await supabase
-        .from('suppliers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (supplierError && supplierError.code !== 'PGRST116') {
-        console.error('Erro ao buscar supplier:', supplierError);
-        return [];
-      }
-
-      // Se não existe supplier, criar um
-      if (!supplier) {
-        console.log('Supplier não encontrado, criando novo...');
-        const { data: newSupplier, error: createError } = await supabase
+      try {
+        // Primeiro buscar o supplier ou criar se não existir
+        let { data: supplier, error: supplierError } = await supabase
           .from('suppliers')
-          .insert({
-            user_id: user.id,
-            company_name: user.user_metadata?.fantasy_name || user.user_metadata?.full_name || 'Fornecedor'
-          })
           .select('id')
-          .single();
+          .eq('user_id', user.id)
+          .maybeSingle();
 
-        if (createError) {
-          console.error('Erro ao criar supplier:', createError);
+        if (supplierError && supplierError.code !== 'PGRST116') {
+          console.error('Erro ao buscar supplier:', supplierError);
           return [];
         }
 
-        supplier = newSupplier;
-        console.log('Supplier criado automaticamente:', supplier.id);
+        // Se não existe supplier, criar um
+        if (!supplier) {
+          console.log('Supplier não encontrado, criando novo...');
+          const { data: newSupplier, error: createError } = await supabase
+            .from('suppliers')
+            .insert({
+              user_id: user.id,
+              company_name: user.user_metadata?.fantasy_name || user.user_metadata?.full_name || 'Fornecedor'
+            })
+            .select('id')
+            .single();
+
+          if (createError) {
+            console.error('Erro ao criar supplier:', createError);
+            return [];
+          }
+
+          supplier = newSupplier;
+          console.log('Supplier criado automaticamente:', supplier.id);
+        }
+
+        console.log('Supplier encontrado/criado:', supplier.id);
+
+        // Buscar produtos do supplier
+        const { data, error } = await supabase
+          .from('products')
+          .select(`
+            *,
+            categories(name, slug)
+          `)
+          .eq('supplier_id', supplier.id)
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erro ao buscar produtos do supplier:', error);
+          throw error;
+        }
+
+        console.log('Produtos encontrados:', data?.length || 0);
+        return data as Product[];
+      } catch (error) {
+        console.error('Erro geral ao buscar produtos do supplier:', error);
+        return [];
       }
-
-      console.log('Supplier encontrado/criado:', supplier.id);
-
-      // Buscar produtos do supplier
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          *,
-          categories(name, slug)
-        `)
-        .eq('supplier_id', supplier.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Erro ao buscar produtos do supplier:', error);
-        throw error;
-      }
-
-      console.log('Produtos encontrados:', data?.length || 0);
-      return data as Product[];
     },
     enabled: !!user,
-    refetchOnWindowFocus: true,
-    staleTime: 0 // Força a busca sempre que necessário
+    retry: 1,
+    refetchOnWindowFocus: false,
+    staleTime: 0
   });
 };
