@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -57,7 +56,7 @@ export const useProducts = () => {
 };
 
 const ensureSupplierExists = async (user: any) => {
-  console.log('🔍 Verificando se supplier existe para usuário:', user.id);
+  console.log('🔍 [SUPPLIER CHECK] Verificando se supplier existe para usuário:', user.id);
   
   // Primeiro tentar buscar o supplier existente
   let { data: supplier, error: supplierError } = await supabase
@@ -66,16 +65,16 @@ const ensureSupplierExists = async (user: any) => {
     .eq('user_id', user.id)
     .maybeSingle();
 
-  console.log('📋 Resultado da busca do supplier:', { supplier, supplierError });
+  console.log('📋 [SUPPLIER CHECK] Resultado da busca do supplier:', { supplier, supplierError });
 
   if (supplierError && supplierError.code !== 'PGRST116') {
-    console.error('❌ Erro ao buscar supplier:', supplierError);
+    console.error('❌ [SUPPLIER CHECK] Erro ao buscar supplier:', supplierError);
     throw new Error('Erro ao verificar fornecedor');
   }
 
   // Se não existe supplier, criar um novo
   if (!supplier) {
-    console.log('➕ Supplier não encontrado, criando novo...');
+    console.log('➕ [SUPPLIER CHECK] Supplier não encontrado, criando novo...');
     
     // Primeiro verificar se o perfil existe na tabela profiles
     const { data: profile, error: profileError } = await supabase
@@ -84,15 +83,15 @@ const ensureSupplierExists = async (user: any) => {
       .eq('id', user.id)
       .maybeSingle();
 
-    console.log('👤 Verificação do perfil:', { profile, profileError });
+    console.log('👤 [SUPPLIER CHECK] Verificação do perfil:', { profile, profileError });
 
     if (profileError) {
-      console.error('❌ Erro ao verificar perfil:', profileError);
+      console.error('❌ [SUPPLIER CHECK] Erro ao verificar perfil:', profileError);
     }
 
     // Se não existe perfil, criar um
     if (!profile) {
-      console.log('➕ Criando perfil antes do supplier...');
+      console.log('➕ [SUPPLIER CHECK] Criando perfil antes do supplier...');
       const { error: createProfileError } = await supabase
         .from('profiles')
         .insert({
@@ -107,10 +106,10 @@ const ensureSupplierExists = async (user: any) => {
         });
 
       if (createProfileError) {
-        console.error('❌ Erro ao criar perfil:', createProfileError);
+        console.error('❌ [SUPPLIER CHECK] Erro ao criar perfil:', createProfileError);
         throw new Error('Erro ao criar perfil do usuário');
       }
-      console.log('✅ Perfil criado com sucesso');
+      console.log('✅ [SUPPLIER CHECK] Perfil criado com sucesso');
     }
 
     // Agora criar o supplier
@@ -124,14 +123,14 @@ const ensureSupplierExists = async (user: any) => {
       .single();
 
     if (createError) {
-      console.error('❌ Erro ao criar supplier:', createError);
+      console.error('❌ [SUPPLIER CHECK] Erro ao criar supplier:', createError);
       throw new Error('Erro ao criar fornecedor');
     }
 
     supplier = newSupplier;
-    console.log('✅ Supplier criado com sucesso:', supplier.id);
+    console.log('✅ [SUPPLIER CHECK] Supplier criado com sucesso:', supplier.id);
   } else {
-    console.log('✅ Supplier encontrado:', supplier.id);
+    console.log('✅ [SUPPLIER CHECK] Supplier encontrado:', supplier.id);
   }
 
   return supplier;
@@ -144,22 +143,50 @@ export const useAddProduct = () => {
 
   return useMutation({
     mutationFn: async (productData: Omit<Product, 'id' | 'suppliers' | 'categories'>) => {
-      if (!user) throw new Error('Usuário não autenticado');
+      if (!user) {
+        console.error('❌ [ADD PRODUCT] Usuário não autenticado');
+        throw new Error('Usuário não autenticado');
+      }
 
-      console.log('🚀 [ADICIONAR PRODUTO] Iniciando processo para usuário:', user.id);
-      console.log('📦 [ADICIONAR PRODUTO] Dados do produto:', productData);
+      console.log('🚀 [ADD PRODUCT] Iniciando processo para usuário:', user.id);
+      console.log('📦 [ADD PRODUCT] Dados recebidos do produto:', JSON.stringify(productData, null, 2));
+
+      // Validar dados obrigatórios
+      if (!productData.name || !productData.price) {
+        console.error('❌ [ADD PRODUCT] Dados obrigatórios faltando:', { name: productData.name, price: productData.price });
+        throw new Error('Nome e preço são obrigatórios');
+      }
 
       // Garantir que o supplier existe
       const supplier = await ensureSupplierExists(user);
+      console.log('🏢 [ADD PRODUCT] Supplier verificado:', supplier.id);
 
-      console.log('💾 [ADICIONAR PRODUTO] Inserindo produto com supplier_id:', supplier.id);
+      // Preparar dados para inserção
+      const insertData = {
+        name: productData.name,
+        description: productData.description || '',
+        technical_description: productData.technical_description || null,
+        price: Number(productData.price),
+        stock_quantity: Number(productData.stock_quantity) || 0,
+        sku: productData.sku || '',
+        brand: productData.brand || '',
+        material: productData.material || null,
+        color: productData.color || null,
+        size: productData.size || null,
+        region: productData.region || null,
+        availability: productData.availability || 'in_stock',
+        image_urls: productData.image_urls || [],
+        supplier_id: supplier.id,
+        category_id: productData.category_id,
+        is_active: productData.is_active !== undefined ? productData.is_active : true
+      };
 
+      console.log('💾 [ADD PRODUCT] Dados preparados para inserção:', JSON.stringify(insertData, null, 2));
+
+      // Inserir no banco de dados
       const { data, error } = await supabase
         .from('products')
-        .insert({
-          ...productData,
-          supplier_id: supplier.id
-        })
+        .insert(insertData)
         .select(`
           *,
           suppliers(company_name, user_id),
@@ -168,43 +195,44 @@ export const useAddProduct = () => {
         .single();
 
       if (error) {
-        console.error('❌ [ADICIONAR PRODUTO] Erro ao inserir produto:', error);
-        throw error;
+        console.error('❌ [ADD PRODUCT] Erro ao inserir produto no banco:', error);
+        console.error('❌ [ADD PRODUCT] Detalhes do erro:', JSON.stringify(error, null, 2));
+        throw new Error(`Erro ao salvar produto: ${error.message}`);
       }
       
-      console.log('✅ [ADICIONAR PRODUTO] Produto inserido com sucesso:', data);
-      console.log('🔍 [ADICIONAR PRODUTO] Dados completos do produto inserido:', JSON.stringify(data, null, 2));
-      
+      if (!data) {
+        console.error('❌ [ADD PRODUCT] Nenhum dado retornado após inserção');
+        throw new Error('Nenhum dado retornado após inserção');
+      }
+
+      console.log('✅ [ADD PRODUCT] Produto inserido com sucesso no banco:', JSON.stringify(data, null, 2));
       return data;
     },
     onSuccess: (data) => {
-      console.log('🎉 [ADICIONAR PRODUTO] onSuccess chamado com produto:', data);
-      console.log('🔄 [ADICIONAR PRODUTO] Invalidando queries...');
+      console.log('🎉 [ADD PRODUCT] onSuccess - produto salvo:', data.name);
       
-      // Primeiro invalidar as queries
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['supplier-products'] });
       queryClient.invalidateQueries({ queryKey: ['supplier-products', user?.id] });
       
-      console.log('⏰ [ADICIONAR PRODUTO] Aguardando 500ms antes do refetch...');
-      
-      // Aguardar um pouco e depois forçar refetch
+      // Forçar refetch imediato
       setTimeout(() => {
-        console.log('🔄 [ADICIONAR PRODUTO] Forçando refetch das queries...');
+        console.log('🔄 [ADD PRODUCT] Forçando refetch das queries...');
         queryClient.refetchQueries({ queryKey: ['supplier-products', user?.id] });
         queryClient.refetchQueries({ queryKey: ['products'] });
-      }, 500);
+      }, 100);
       
       toast({
         title: "Produto adicionado!",
-        description: "Produto foi adicionado ao catálogo com sucesso.",
+        description: `${data.name} foi adicionado ao catálogo com sucesso.`,
       });
     },
-    onError: (error) => {
-      console.error('❌ [ADICIONAR PRODUTO] Erro no onError:', error);
+    onError: (error: any) => {
+      console.error('❌ [ADD PRODUCT] Erro no onError:', error);
       toast({
         title: "Erro ao adicionar produto",
-        description: error.message,
+        description: error.message || 'Erro desconhecido ao adicionar produto',
         variant: "destructive"
       });
     }
@@ -332,7 +360,6 @@ export const useSupplierProducts = () => {
       try {
         // Garantir que o supplier existe
         const supplier = await ensureSupplierExists(user);
-
         console.log('🏢 [SUPPLIER PRODUCTS] Buscando produtos do supplier:', supplier.id);
 
         // Buscar produtos do supplier
@@ -345,7 +372,10 @@ export const useSupplierProducts = () => {
           .eq('supplier_id', supplier.id)
           .order('created_at', { ascending: false });
 
-        console.log('📊 [SUPPLIER PRODUCTS] Resultado da query:', { data, error });
+        console.log('📊 [SUPPLIER PRODUCTS] Resultado da query produtos:', { 
+          data: data ? `${data.length} produtos encontrados` : 'null', 
+          error: error ? error.message : 'nenhum erro' 
+        });
 
         if (error) {
           console.error('❌ [SUPPLIER PRODUCTS] Erro ao buscar produtos:', error);
@@ -355,12 +385,10 @@ export const useSupplierProducts = () => {
         console.log(`✅ [SUPPLIER PRODUCTS] ${data?.length || 0} produtos encontrados`);
         
         if (data && data.length > 0) {
-          console.log('📋 [SUPPLIER PRODUCTS] Produtos detalhados:');
+          console.log('📋 [SUPPLIER PRODUCTS] Produtos encontrados:');
           data.forEach((product, index) => {
-            console.log(`   ${index + 1}. ${product.name} (ID: ${product.id}) - SKU: ${product.sku}`);
+            console.log(`   ${index + 1}. ${product.name} (ID: ${product.id}) - SKU: ${product.sku} - Ativo: ${product.is_active}`);
           });
-        } else {
-          console.log('📋 [SUPPLIER PRODUCTS] Nenhum produto encontrado para este supplier');
         }
         
         return data as Product[];
@@ -371,7 +399,7 @@ export const useSupplierProducts = () => {
     },
     enabled: !!user,
     retry: 1,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true,
     staleTime: 0,
     gcTime: 0
   });
