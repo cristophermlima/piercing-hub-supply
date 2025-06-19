@@ -14,6 +14,12 @@ import { Plus, X, Upload, Download, FileText, AlertCircle, CheckCircle } from 'l
 import { useToast } from '@/hooks/use-toast';
 import { useAddProduct } from '@/hooks/useProducts';
 
+// Mapeamento das categorias para UUIDs (você pode ajustar esses UUIDs conforme sua base de dados)
+const CATEGORY_MAPPING = {
+  'joias-titanio': '550e8400-e29b-41d4-a716-446655440001', // UUID exemplo para joias de titânio
+  'joias-ouro': '550e8400-e29b-41d4-a716-446655440002'     // UUID exemplo para joias de ouro
+};
+
 const productSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   description: z.string().min(1, 'Descrição é obrigatória'),
@@ -137,6 +143,10 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
 
     for (const row of csvPreviewData) {
       try {
+        // Mapear categoria para UUID correto
+        const categoryKey = row.category as keyof typeof CATEGORY_MAPPING;
+        const categoryId = CATEGORY_MAPPING[categoryKey] || CATEGORY_MAPPING['joias-titanio'];
+
         const productData = {
           name: row.name,
           description: row.description,
@@ -152,7 +162,7 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
           availability: 'in_stock' as const,
           image_urls: row.image_urls ? row.image_urls.split(';') : [],
           supplier_id: '', // Será preenchido pelo hook
-          category_id: row.category === 'joias-ouro' ? 'joias-ouro' : 'joias-titanio',
+          category_id: categoryId, // Usar UUID mapeado
           is_active: true
         };
 
@@ -184,6 +194,14 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
 
   const onSubmit = async (data: ProductFormData) => {
     try {
+      console.log('🚀 [FORM SUBMIT] Dados do formulário:', data);
+      
+      // Mapear categoria para UUID correto
+      const categoryKey = data.category as keyof typeof CATEGORY_MAPPING;
+      const categoryId = CATEGORY_MAPPING[categoryKey] || CATEGORY_MAPPING['joias-titanio'];
+      
+      console.log('🏷️ [FORM SUBMIT] Categoria mapeada:', { categoryKey, categoryId });
+
       const productData = {
         name: data.name,
         description: data.description,
@@ -199,15 +217,17 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
         availability: 'in_stock' as const,
         image_urls: imageUrls,
         supplier_id: '', // Será preenchido pelo hook
-        category_id: data.category,
+        category_id: categoryId, // Usar UUID mapeado ao invés da string
         is_active: true
       };
+
+      console.log('📦 [FORM SUBMIT] Dados finais para envio:', productData);
 
       await addProduct.mutateAsync(productData);
       onSuccess();
       onClose();
     } catch (error) {
-      console.error('Erro ao adicionar produto:', error);
+      console.error('❌ [FORM SUBMIT] Erro ao adicionar produto:', error);
     }
   };
 
