@@ -14,10 +14,10 @@ import { Plus, X, Upload, Download, FileText, AlertCircle, CheckCircle } from 'l
 import { useToast } from '@/hooks/use-toast';
 import { useAddProduct } from '@/hooks/useProducts';
 
-// Mapeamento das categorias para UUIDs (você pode ajustar esses UUIDs conforme sua base de dados)
+// Mapeamento das categorias para UUIDs reais do banco de dados
 const CATEGORY_MAPPING = {
-  'joias-titanio': '550e8400-e29b-41d4-a716-446655440001', // UUID exemplo para joias de titânio
-  'joias-ouro': '550e8400-e29b-41d4-a716-446655440002'     // UUID exemplo para joias de ouro
+  'joias-titanio': '95f9468d-fbb9-4b22-a039-0aff9a2ff91b',
+  'joias-ouro': '38731d7e-0c10-4c37-ab68-762c769d71a7'
 };
 
 const productSchema = z.object({
