@@ -1,16 +1,18 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { CheckoutDialog } from '@/components/checkout/CheckoutDialog';
 
 const Cart = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { items, updateQuantity, removeFromCart, clearCart, totalItems, totalPrice, isLoading } = useCart();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   if (!user) {
     return (
@@ -133,9 +135,13 @@ const Cart = () => {
                     <span>R$ {totalPrice.toFixed(2)}</span>
                   </div>
                 </div>
-                <Button className="w-full bg-black hover:bg-gray-800 text-white">
+                <Button 
+                  className="w-full"
+                  onClick={() => setCheckoutOpen(true)}
+                >
                   Finalizar Compra
                 </Button>
+                <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
               </CardContent>
             </Card>
           </div>

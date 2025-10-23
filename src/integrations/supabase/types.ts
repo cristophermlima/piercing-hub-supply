@@ -116,31 +116,47 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          notes: string | null
           shipping_address: Json | null
           status: string | null
+          supplier_id: string | null
           total_amount: number
+          tracking_number: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
+          notes?: string | null
           shipping_address?: Json | null
           status?: string | null
+          supplier_id?: string | null
           total_amount: number
+          tracking_number?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
+          notes?: string | null
           shipping_address?: Json | null
           status?: string | null
+          supplier_id?: string | null
           total_amount?: number
+          tracking_number?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_user_id_fkey"
             columns: ["user_id"]
@@ -332,7 +348,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_orders_from_cart: {
+        Args: { p_shipping_address: Json; p_user_id: string }
+        Returns: {
+          order_id: string
+          supplier_id: string
+        }[]
+      }
     }
     Enums: {
       approval_status: "pending" | "approved" | "rejected"
