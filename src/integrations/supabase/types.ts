@@ -118,6 +118,9 @@ export type Database = {
           id: string
           notes: string | null
           shipping_address: Json | null
+          shipping_cost: number | null
+          shipping_deadline: number | null
+          shipping_method: string | null
           status: string | null
           supplier_id: string | null
           total_amount: number
@@ -130,6 +133,9 @@ export type Database = {
           id?: string
           notes?: string | null
           shipping_address?: Json | null
+          shipping_cost?: number | null
+          shipping_deadline?: number | null
+          shipping_method?: string | null
           status?: string | null
           supplier_id?: string | null
           total_amount: number
@@ -142,6 +148,9 @@ export type Database = {
           id?: string
           notes?: string | null
           shipping_address?: Json | null
+          shipping_cost?: number | null
+          shipping_deadline?: number | null
+          shipping_method?: string | null
           status?: string | null
           supplier_id?: string | null
           total_amount?: number
@@ -305,6 +314,7 @@ export type Database = {
           rating: number | null
           total_products: number | null
           user_id: string | null
+          zipcode: string | null
         }
         Insert: {
           company_name: string
@@ -315,6 +325,7 @@ export type Database = {
           rating?: number | null
           total_products?: number | null
           user_id?: string | null
+          zipcode?: string | null
         }
         Update: {
           company_name?: string
@@ -325,6 +336,7 @@ export type Database = {
           rating?: number | null
           total_products?: number | null
           user_id?: string | null
+          zipcode?: string | null
         }
         Relationships: [
           {
