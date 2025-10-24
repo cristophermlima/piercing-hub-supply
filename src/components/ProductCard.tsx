@@ -3,7 +3,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, Clock, Package, Gem } from 'lucide-react';
+import { ShoppingCart, Clock, Package, Gem, Plus, Minus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAddToCart } from '@/hooks/useCart';
 import { useNavigate } from 'react-router-dom';
@@ -54,6 +54,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const addToCartMutation = useAddToCart();
+  const [quantity, setQuantity] = React.useState(1);
 
   const handleAddToCart = () => {
     if (!user) {
@@ -61,7 +62,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
       return;
     }
 
-    addToCartMutation.mutate({ productId: id });
+    addToCartMutation.mutate({ productId: id, quantity });
+  };
+
+  const incrementQuantity = () => {
+    if (quantity < stock) {
+      setQuantity(quantity + 1);
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(quantity - 1);
+    }
   };
 
   const isJewelry = category.includes('joias');
@@ -153,6 +166,29 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </p>
             <p className="text-xs text-gray-400 mb-3">SKU: {sku}</p>
             
+            {/* Seletor de quantidade */}
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={decrementQuantity}
+                disabled={quantity <= 1}
+                className="h-8 w-8 p-0"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="font-medium text-sm w-12 text-center">{quantity}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={incrementQuantity}
+                disabled={quantity >= stock}
+                className="h-8 w-8 p-0"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
             <Button 
               onClick={handleAddToCart}
               className="w-full bg-black hover:bg-gray-800 text-white flex items-center justify-center space-x-2"
