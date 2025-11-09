@@ -30,7 +30,7 @@ const productSchema = z.object({
   brand: z.string().min(1, 'Marca é obrigatória'),
   material: z.enum(['Titânio', 'Ouro 18k', 'Ouro 14k', 'Aço Cirúrgico']),
   color: z.string().min(1, 'Cor é obrigatória'),
-  category: z.enum(['joias-titanio', 'joias-ouro']),
+  category_id: z.string().min(1, 'Categoria é obrigatória'),
   jewelry_type: z.enum(['labret', 'argola-segmento', 'argola-torcao', 'argola-captive', 'barbell', 'plugs']),
   size_mm: z.number().min(1, 'Tamanho é obrigatório'),
   thickness_mm: z.number().optional(),
@@ -196,11 +196,7 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
     try {
       console.log('🚀 [FORM SUBMIT] Dados do formulário:', data);
       
-      // Mapear categoria para UUID correto
-      const categoryKey = data.category as keyof typeof CATEGORY_MAPPING;
-      const categoryId = CATEGORY_MAPPING[categoryKey] || CATEGORY_MAPPING['joias-titanio'];
-      
-      console.log('🏷️ [FORM SUBMIT] Categoria mapeada:', { categoryKey, categoryId });
+      console.log('🏷️ [FORM SUBMIT] Categoria ID:', data.category_id);
 
       const productData = {
         name: data.name,
@@ -217,7 +213,7 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
         availability: 'in_stock' as const,
         image_urls: imageUrls,
         supplier_id: '', // Será preenchido pelo hook
-        category_id: categoryId, // Usar UUID mapeado ao invés da string
+        category_id: data.category_id,
         is_active: true
       };
 
@@ -424,7 +420,7 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
 
                     <FormField
                       control={form.control}
-                      name="category"
+                      name="category_id"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Categoria</FormLabel>
@@ -438,8 +434,8 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="joias-titanio">Joias Titânio</SelectItem>
-                              <SelectItem value="joias-ouro">Joias Ouro</SelectItem>
+                              <SelectItem value="38731d7e-0c10-4c37-ab68-762c769d71a7">Joias Ouro</SelectItem>
+                              <SelectItem value="e5f8a9c2-1234-5678-9abc-def012345678">Joias Titânio</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />

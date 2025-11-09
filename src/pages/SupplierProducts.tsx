@@ -178,25 +178,6 @@ const SupplierProducts = () => {
           </div>
         </div>
 
-        {/* Debug Info Expandido */}
-        {process.env.NODE_ENV === 'development' && (
-          <Card className="mb-6 bg-yellow-50 border-yellow-200">
-            <CardContent className="pt-6">
-              <h3 className="font-semibold mb-2">Debug Info Detalhado:</h3>
-              <div className="text-sm space-y-1">
-                <p><strong>User ID:</strong> {user?.id}</p>
-                <p><strong>Loading:</strong> {productsLoading ? 'Yes' : 'No'}</p>
-                <p><strong>Refetching:</strong> {isRefetching ? 'Yes' : 'No'}</p>
-                <p><strong>Products Count:</strong> {products?.length || 0}</p>
-                <p><strong>Products Array:</strong> {Array.isArray(products) ? 'Yes' : 'No'}</p>
-                <p><strong>Error:</strong> {productsError ? 'Yes' : 'No'}</p>
-                {productsError && <p className="text-red-600"><strong>Error Details:</strong> {JSON.stringify(productsError, null, 2)}</p>}
-                <p><strong>Filtered Products:</strong> {filteredProducts?.length || 0}</p>
-                <p><strong>Modal Open:</strong> {isAddModalOpen ? 'Yes' : 'No'}</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Filtros e Busca */}
         <Card className="mb-6">

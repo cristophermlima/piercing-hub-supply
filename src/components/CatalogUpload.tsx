@@ -66,15 +66,22 @@ const CatalogUpload = () => {
   };
 
   const downloadTemplate = () => {
-    const csvTemplate = `nome,descricao,preco,categoria,tipo,marca,tamanho,estoque,disponibilidade,material,cor,rosca,certificacao,sku,descricao_tecnica,prazo_entrega,regiao
-Argola Titânio 8mm,Argola em titânio G23 com fechamento segmento,89.90,joias-titanio,argola,Premium Line,8mm,150,pronta-entrega,Titânio,Natural,Externa,G23 ASTM F136,PL-ARG008,Titânio G23 ASTM F136 com acabamento polido,24-48h,Sudeste
-Labret Ouro 18k,Labret em ouro 18k com rosca interna,450.00,joias-ouro,labret,Gold Line,6mm,25,sob-encomenda,Ouro 18k,Dourado,Interna,AU 750,GL-LAB006,Ouro 18k maciço com polimento espelhado,7-10 dias,Sul`;
+    const csvTemplate = `nome,descricao,descricao_tecnica,preco,estoque,disponibilidade,sku,marca,material,cor,tamanho,regiao,categoria_id,url_imagem_1,url_imagem_2,url_imagem_3
+Argola Titânio 8mm,Argola em titânio G23 com fechamento segmento,Titânio G23 ASTM F136 com acabamento polido,89.90,150,in_stock,PL-ARG008,Premium Line,Titânio,Natural,8,Sudeste,e5f8a9c2-1234-5678-9abc-def012345678,https://exemplo.com/foto1.jpg,,
+Labret Ouro 18k,Labret em ouro 18k com rosca interna,Ouro 18k maciço com polimento espelhado,450.00,25,in_stock,GL-LAB006,Gold Line,Ouro 18k,Dourado,6,Sul,38731d7e-0c10-4c37-ab68-762c769d71a7,https://exemplo.com/foto2.jpg,,
+
+INSTRUÇÕES:
+- categoria_id: Use "38731d7e-0c10-4c37-ab68-762c769d71a7" para Joias Ouro ou "e5f8a9c2-1234-5678-9abc-def012345678" para Joias Titânio
+- disponibilidade: Use "in_stock" (em estoque) ou "out_of_stock" (sem estoque)
+- preco: Apenas números com ponto decimal (ex: 89.90)
+- estoque: Apenas números inteiros
+- url_imagem_1, url_imagem_2, url_imagem_3: URLs completas das imagens (opcional)`;
     
-    const blob = new Blob([csvTemplate], { type: 'text/csv' });
+    const blob = new Blob([csvTemplate], { type: 'text/csv;charset=utf-8;' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'template-catalogo-piercerhub.csv';
+    a.download = 'template-produtos-piercerhub.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
