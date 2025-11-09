@@ -5,13 +5,10 @@ import { useAuth } from './useAuth';
 
 export interface Profile {
   id: string;
-  email: string;
+  user_id: string;
   full_name: string;
-  user_type: 'piercer' | 'supplier';
-  cnpj?: string;
-  fantasy_name?: string;
-  commercial_contact?: string;
-  company_address?: string;
+  phone: string;
+  user_type: 'buyer' | 'supplier';
   created_at: string;
   updated_at: string;
 }
@@ -33,12 +30,11 @@ export const useProfile = () => {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('user_id', user.id)
           .maybeSingle();
 
         if (error) {
           console.error('Error fetching profile from database:', error);
-          // Se há erro na busca, usar metadados do usuário como fallback
         }
 
         if (data) {
@@ -48,14 +44,11 @@ export const useProfile = () => {
 
         // Se não há dados na tabela profiles, criar perfil baseado nos metadados do usuário
         const profileFromMetadata: Profile = {
-          id: user.id,
-          email: user.email || '',
+          id: '',
+          user_id: user.id,
           full_name: user.user_metadata?.full_name || '',
-          user_type: user.user_metadata?.user_type || 'piercer',
-          cnpj: user.user_metadata?.cnpj || '',
-          fantasy_name: user.user_metadata?.fantasy_name || '',
-          commercial_contact: user.user_metadata?.commercial_contact || '',
-          company_address: user.user_metadata?.company_address || '',
+          phone: user.user_metadata?.phone || '',
+          user_type: user.user_metadata?.user_type || 'buyer',
           created_at: user.created_at || new Date().toISOString(),
           updated_at: user.updated_at || new Date().toISOString()
         };
@@ -67,14 +60,11 @@ export const useProfile = () => {
         
         // Em caso de erro inesperado, ainda tentar usar os metadados do usuário
         const profileFromMetadata: Profile = {
-          id: user.id,
-          email: user.email || '',
+          id: '',
+          user_id: user.id,
           full_name: user.user_metadata?.full_name || '',
-          user_type: user.user_metadata?.user_type || 'piercer',
-          cnpj: user.user_metadata?.cnpj || '',
-          fantasy_name: user.user_metadata?.fantasy_name || '',
-          commercial_contact: user.user_metadata?.commercial_contact || '',
-          company_address: user.user_metadata?.company_address || '',
+          phone: user.user_metadata?.phone || '',
+          user_type: user.user_metadata?.user_type || 'buyer',
           created_at: user.created_at || new Date().toISOString(),
           updated_at: user.updated_at || new Date().toISOString()
         };

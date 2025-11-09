@@ -65,20 +65,6 @@ const Orders = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    {order.suppliers.logo_url && (
-                      <img
-                        src={order.suppliers.logo_url}
-                        alt={order.suppliers.company_name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    )}
-                    <div>
-                      <p className="font-semibold">{order.suppliers.company_name}</p>
-                      <p className="text-sm text-muted-foreground">Fornecedor</p>
-                    </div>
-                  </div>
-
                   <div className="space-y-2">
                     {order.order_items.map((item) => (
                       <div key={item.id} className="flex items-center gap-4 py-2 border-b last:border-0">
@@ -97,13 +83,6 @@ const Orders = () => {
                       </div>
                     ))}
                   </div>
-
-                  {order.tracking_number && (
-                    <div className="bg-muted p-3 rounded">
-                      <p className="text-sm font-medium">Código de Rastreamento:</p>
-                      <p className="text-sm">{order.tracking_number}</p>
-                    </div>
-                  )}
 
                   <div className="flex justify-between items-center pt-2 border-t">
                     <span className="font-semibold">Total:</span>

@@ -60,7 +60,7 @@ const UserProfile = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold">
-                {profile?.fantasy_name || profile?.full_name || 'Usuário'}
+                {profile?.full_name || 'Usuário'}
               </h1>
               <p className="text-gray-600">{user.email}</p>
             </div>
@@ -94,18 +94,10 @@ const UserProfile = () => {
                   </Badge>
                 </div>
               </div>
-              {profile?.user_type === 'supplier' && (
-                <>
-                  <div>
-                    <Label>Nome Fantasia</Label>
-                    <Input value={profile?.fantasy_name || ''} disabled={!isEditing} />
-                  </div>
-                  <div>
-                    <Label>CNPJ</Label>
-                    <Input value={profile?.cnpj || ''} disabled={!isEditing} />
-                  </div>
-                </>
-              )}
+              <div>
+                <Label>Telefone</Label>
+                <Input value={profile?.phone || ''} disabled={!isEditing} />
+              </div>
               <Button
                 variant={isEditing ? "default" : "outline"}
                 onClick={() => setIsEditing(!isEditing)}

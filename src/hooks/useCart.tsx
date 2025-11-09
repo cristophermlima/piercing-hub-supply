@@ -48,7 +48,14 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
             name,
             description,
             price,
+            stock_quantity,
+            sku,
+            brand,
+            availability,
+            is_active,
             image_urls,
+            category_id,
+            supplier_id,
             suppliers (
               company_name
             )
@@ -61,7 +68,7 @@ export const CartProvider = ({ children }: { children: React.ReactNode }) => {
         throw error;
       }
 
-      return data as CartItem[];
+      return data as any as CartItem[];
     },
     enabled: !!user
   });

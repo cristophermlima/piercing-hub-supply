@@ -18,17 +18,11 @@ export interface OrderItem {
 export interface Order {
   id: string;
   user_id: string;
-  supplier_id: string;
   total_amount: number;
   status: string;
   shipping_address: any;
-  tracking_number?: string;
-  notes?: string;
   created_at: string;
-  suppliers: {
-    company_name: string;
-    logo_url?: string;
-  };
+  updated_at: string;
   order_items: OrderItem[];
 }
 
@@ -46,10 +40,6 @@ export const useOrders = () => {
         .from('orders')
         .select(`
           *,
-          suppliers (
-            company_name,
-            logo_url
-          ),
           order_items (
             *,
             products (
@@ -62,23 +52,18 @@ export const useOrders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Order[];
+      return data as any as Order[];
     },
     enabled: !!user,
   });
 
-  // Criar pedidos a partir do carrinho
+  // Criar pedidos a partir do carrinho (comentado até implementar RPC)
   const createOrdersMutation = useMutation({
     mutationFn: async (shippingAddress: any) => {
       if (!user) throw new Error('Usuário não autenticado');
-
-      const { data, error } = await supabase.rpc('create_orders_from_cart', {
-        p_user_id: user.id,
-        p_shipping_address: shippingAddress,
-      });
-
-      if (error) throw error;
-      return data;
+      
+      // TODO: Implementar criação de pedidos
+      throw new Error('Funcionalidade em desenvolvimento');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
@@ -121,29 +106,28 @@ export const useSupplierOrders = () => {
       if (!supplier) return [];
 
       const { data, error } = await supabase
-        .from('orders')
+        .from('order_items')
         .select(`
           *,
-          profiles (
-            full_name,
-            email,
-            commercial_contact,
-            company_address
+          products (
+            name,
+            image_urls,
+            sku
           ),
-          order_items (
-            *,
-            products (
-              name,
-              image_urls,
-              sku
-            )
+          orders!inner (
+            id,
+            user_id,
+            status,
+            total_amount,
+            shipping_address,
+            created_at
           )
         `)
         .eq('supplier_id', supplier.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return data as any;
     },
     enabled: !!user,
   });
@@ -168,13 +152,14 @@ export const useSupplierOrders = () => {
     },
   });
 
-  // Adicionar número de rastreamento
+  // Adicionar código de rastreamento
   const updateTrackingMutation = useMutation({
-    mutationFn: async ({ orderId, trackingNumber }: { orderId: string; trackingNumber: string }) => {
+    mutationFn: async ({ orderId, trackingCode }: { orderId: string; trackingCode: string }) => {
+      // Atualizar no order_items
       const { error } = await supabase
-        .from('orders')
-        .update({ tracking_number: trackingNumber })
-        .eq('id', orderId);
+        .from('order_items')
+        .update({ tracking_code: trackingCode })
+        .eq('order_id', orderId);
 
       if (error) throw error;
     },

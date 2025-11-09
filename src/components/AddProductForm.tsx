@@ -430,11 +430,11 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
                           <FormLabel>Categoria</FormLabel>
                           <Select 
                             onValueChange={field.onChange} 
-                            value={watchMaterial?.includes('Ouro') ? 'joias-ouro' : 'joias-titanio'}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger>
-                                <SelectValue />
+                                <SelectValue placeholder="Selecione a categoria" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>

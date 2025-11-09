@@ -80,7 +80,7 @@ const ensureSupplierExists = async (user: any) => {
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('id')
-      .eq('id', user.id)
+      .eq('user_id', user.id)
       .maybeSingle();
 
     console.log('👤 [SUPPLIER CHECK] Verificação do perfil:', { profile, profileError });
@@ -95,14 +95,10 @@ const ensureSupplierExists = async (user: any) => {
       const { error: createProfileError } = await supabase
         .from('profiles')
         .insert({
-          id: user.id,
-          email: user.email,
+          user_id: user.id,
           full_name: user.user_metadata?.full_name || 'Usuário',
-          user_type: user.user_metadata?.user_type || 'supplier',
-          cnpj: user.user_metadata?.cnpj || '',
-          fantasy_name: user.user_metadata?.fantasy_name || '',
-          commercial_contact: user.user_metadata?.commercial_contact || '',
-          company_address: user.user_metadata?.company_address || ''
+          phone: user.user_metadata?.phone || '',
+          user_type: user.user_metadata?.user_type || 'supplier'
         });
 
       if (createProfileError) {

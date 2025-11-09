@@ -61,8 +61,8 @@ const SupplierDashboard = () => {
   const totalValue = products.reduce((sum, product) => sum + (product.price * product.stock_quantity), 0);
   const lowStockProducts = products.filter(product => product.stock_quantity < 10).length;
 
-  // Get display name - prefer fantasy_name, then full_name from profile, then from user metadata
-  const displayName = profile?.fantasy_name || profile?.full_name || user?.user_metadata?.fantasy_name || user?.user_metadata?.full_name || 'Fornecedor';
+  // Get display name from profile
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Fornecedor';
 
   return (
     <div className="min-h-screen bg-gray-50">
