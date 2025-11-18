@@ -57,13 +57,17 @@ export const useOrders = () => {
     enabled: !!user,
   });
 
-  // Criar pedidos a partir do carrinho (comentado até implementar RPC)
+  // Criar pedidos a partir do carrinho
   const createOrdersMutation = useMutation({
     mutationFn: async (shippingAddress: any) => {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // TODO: Implementar criação de pedidos
-      throw new Error('Funcionalidade em desenvolvimento');
+      const { data, error } = await supabase.functions.invoke('create-orders-from-cart', {
+        body: { shipping_address: shippingAddress },
+      });
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] });
