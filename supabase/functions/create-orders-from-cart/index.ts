@@ -28,6 +28,12 @@ serve(async (req) => {
   try {
     // Pegar o token de autorização
     const authHeader = req.headers.get('authorization');
+    
+    console.log('Headers received:', {
+      authorization: authHeader ? 'present' : 'missing',
+      length: authHeader?.length || 0
+    });
+    
     if (!authHeader) {
       throw new Error('Token de autenticação não fornecido');
     }
@@ -42,11 +48,17 @@ serve(async (req) => {
       }
     );
 
-    console.log('Auth header present:', !!authHeader);
-
     // Verificar autenticação
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    
+    console.log('Auth check:', {
+      userExists: !!user,
+      userId: user?.id,
+      authError: authError?.message
+    });
+    
     if (authError || !user) {
+      console.error('Auth error details:', authError);
       throw new Error('Não autenticado');
     }
 
