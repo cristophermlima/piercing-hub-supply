@@ -26,15 +26,23 @@ serve(async (req) => {
   }
 
   try {
+    // Pegar o token de autorização
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader) {
+      throw new Error('Token de autenticação não fornecido');
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
       {
         global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
+          headers: { Authorization: authHeader },
         },
       }
     );
+
+    console.log('Auth header present:', !!authHeader);
 
     // Verificar autenticação
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
