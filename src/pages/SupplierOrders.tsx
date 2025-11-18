@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -7,92 +6,42 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Eye, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lucide-react';
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  items: {
-    id: string;
-    name: string;
-    quantity: number;
-    price: number;
-  }[];
-  total: number;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
-  createdAt: string;
-  shippingAddress: {
-    street: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
-}
+import { useSupplierOrders } from '@/hooks/useOrders';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const SupplierOrders = () => {
-  const [orders] = useState<Order[]>([
-    {
-      id: '1',
-      orderNumber: 'PED-2024-001',
-      customerName: 'Studio Piercing Arte',
-      customerEmail: 'contato@studioarte.com',
-      items: [
-        { id: '1', name: 'Labret Titânio 8mm', quantity: 5, price: 45.00 },
-        { id: '2', name: 'Argola Segmento 10mm', quantity: 3, price: 65.00 }
-      ],
-      total: 420.00,
-      status: 'pending',
-      createdAt: '2024-01-20',
-      shippingAddress: {
-        street: 'Rua das Flores, 123',
-        city: 'São Paulo',
-        state: 'SP',
-        zipCode: '01234-567'
-      }
-    },
-    {
-      id: '2',
-      orderNumber: 'PED-2024-002',
-      customerName: 'Piercer Professional',
-      customerEmail: 'pedro@piercerpro.com',
-      items: [
-        { id: '3', name: 'Barbell Curvo Ouro 18k', quantity: 2, price: 380.00 }
-      ],
-      total: 760.00,
-      status: 'processing',
-      createdAt: '2024-01-19',
-      shippingAddress: {
-        street: 'Av. Principal, 456',
-        city: 'Rio de Janeiro',
-        state: 'RJ',
-        zipCode: '20123-456'
-      }
-    },
-    {
-      id: '3',
-      orderNumber: 'PED-2024-003',
-      customerName: 'Body Art Studio',
-      customerEmail: 'vendas@bodyart.com',
-      items: [
-        { id: '4', name: 'Plugs Titânio 12mm', quantity: 10, price: 25.00 },
-        { id: '5', name: 'Argola Captive 8mm', quantity: 8, price: 35.00 }
-      ],
-      total: 530.00,
-      status: 'shipped',
-      createdAt: '2024-01-18',
-      shippingAddress: {
-        street: 'Rua do Comércio, 789',
-        city: 'Belo Horizonte',
-        state: 'MG',
-        zipCode: '30123-789'
-      }
-    }
-  ]);
-
+  const { orders: orderItems = [], isLoading } = useSupplierOrders();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+
+  // Agrupar order_items por order_id
+  const groupedOrders = orderItems.reduce((acc: any, item: any) => {
+    const orderId = item.orders.id;
+    if (!acc[orderId]) {
+      acc[orderId] = {
+        id: orderId,
+        orderNumber: orderId.substring(0, 8).toUpperCase(),
+        status: item.status,
+        total: item.orders.total_amount,
+        createdAt: item.orders.created_at,
+        shippingAddress: JSON.parse(item.orders.shipping_address),
+        items: []
+      };
+    }
+    acc[orderId].items.push({
+      id: item.id,
+      name: item.products.name,
+      quantity: item.quantity,
+      price: item.price,
+      sku: item.products.sku,
+      image: item.products.image_urls?.[0]
+    });
+    return acc;
+  }, {});
+
+  const orders = Object.values(groupedOrders);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -129,200 +78,90 @@ const SupplierOrders = () => {
   };
 
   const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'Pendente';
-      case 'processing':
-        return 'Processando';
-      case 'shipped':
-        return 'Enviado';
-      case 'delivered':
-        return 'Entregue';
-      case 'cancelled':
-        return 'Cancelado';
-      default:
-        return status;
-    }
+    const labels: Record<string, string> = {
+      pending: 'Pendente',
+      processing: 'Processando',
+      shipped: 'Enviado',
+      delivered: 'Entregue',
+      cancelled: 'Cancelado'
+    };
+    return labels[status] || status;
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredOrders = orders.filter((order: any) => {
+    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  const updateOrderStatus = (orderId: string, newStatus: string) => {
-    console.log(`Atualizando pedido ${orderId} para status: ${newStatus}`);
-    // Aqui implementaríamos a atualização no banco de dados
-  };
+  const selectedOrder: any = orders.find((order: any) => order.id === selectedOrderId);
 
-  if (selectedOrder) {
+  const statusCounts = orders.reduce((acc: Record<string, number>, order: any) => {
+    acc[order.status] = (acc[order.status] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="bg-black text-white shadow-md">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">Detalhes do Pedido</h1>
-              <Button variant="outline" onClick={() => setSelectedOrder(null)}>
-                Voltar
-              </Button>
-            </div>
-          </div>
-        </header>
-
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Informações do Pedido</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <strong>Número:</strong> {selectedOrder.orderNumber}
-                </div>
-                <div>
-                  <strong>Data:</strong> {new Date(selectedOrder.createdAt).toLocaleDateString('pt-BR')}
-                </div>
-                <div>
-                  <strong>Status:</strong>
-                  <Badge className={`ml-2 ${getStatusColor(selectedOrder.status)}`}>
-                    {getStatusIcon(selectedOrder.status)}
-                    <span className="ml-1">{getStatusLabel(selectedOrder.status)}</span>
-                  </Badge>
-                </div>
-                <div>
-                  <strong>Total:</strong> R$ {selectedOrder.total.toFixed(2)}
-                </div>
-                
-                <div className="mt-4">
-                  <strong>Atualizar Status:</strong>
-                  <Select onValueChange={(value) => updateOrderStatus(selectedOrder.id, value)}>
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder="Selecionar novo status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pendente</SelectItem>
-                      <SelectItem value="processing">Processando</SelectItem>
-                      <SelectItem value="shipped">Enviado</SelectItem>
-                      <SelectItem value="delivered">Entregue</SelectItem>
-                      <SelectItem value="cancelled">Cancelado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Cliente</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <strong>Nome:</strong> {selectedOrder.customerName}
-                </div>
-                <div>
-                  <strong>Email:</strong> {selectedOrder.customerEmail}
-                </div>
-                <div>
-                  <strong>Endereço de Entrega:</strong>
-                  <div className="mt-1 text-sm text-gray-600">
-                    {selectedOrder.shippingAddress.street}<br/>
-                    {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}<br/>
-                    CEP: {selectedOrder.shippingAddress.zipCode}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Itens do Pedido</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Produto</TableHead>
-                      <TableHead>Quantidade</TableHead>
-                      <TableHead>Preço Unit.</TableHead>
-                      <TableHead>Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedOrder.items.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.name}</TableCell>
-                        <TableCell>{item.quantity}</TableCell>
-                        <TableCell>R$ {item.price.toFixed(2)}</TableCell>
-                        <TableCell>R$ {(item.price * item.quantity).toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </div>
+      <div className="min-h-screen bg-background p-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold mb-8">Gestão de Pedidos</h1>
+          <p>Carregando pedidos...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-black text-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <h1 className="text-2xl font-bold">Gestão de Pedidos</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background p-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <h1 className="text-3xl font-bold">Gestão de Pedidos</h1>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Pedidos Pendentes</p>
-                  <p className="text-2xl font-bold">8</p>
+                  <p className="text-sm text-muted-foreground">Pedidos Pendentes</p>
+                  <p className="text-2xl font-bold">{statusCounts['pending'] || 0}</p>
                 </div>
-                <Clock className="h-8 w-8 text-yellow-600" />
+                <Clock className="h-8 w-8 text-yellow-500" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Em Processamento</p>
-                  <p className="text-2xl font-bold">12</p>
+                  <p className="text-sm text-muted-foreground">Em Processamento</p>
+                  <p className="text-2xl font-bold">{statusCounts['processing'] || 0}</p>
                 </div>
-                <Package className="h-8 w-8 text-blue-600" />
+                <Package className="h-8 w-8 text-blue-500" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Enviados</p>
-                  <p className="text-2xl font-bold">25</p>
+                  <p className="text-sm text-muted-foreground">Enviados</p>
+                  <p className="text-2xl font-bold">{statusCounts['shipped'] || 0}</p>
                 </div>
-                <Truck className="h-8 w-8 text-purple-600" />
+                <Truck className="h-8 w-8 text-purple-500" />
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Entregues</p>
-                  <p className="text-2xl font-bold">156</p>
+                  <p className="text-sm text-muted-foreground">Entregues</p>
+                  <p className="text-2xl font-bold">{statusCounts['delivered'] || 0}</p>
                 </div>
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
@@ -331,9 +170,11 @@ const SupplierOrders = () => {
         <Card>
           <CardHeader>
             <CardTitle>Lista de Pedidos</CardTitle>
-            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-4 mb-6">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Buscar por número do pedido ou cliente..."
                   value={searchTerm}
@@ -342,8 +183,8 @@ const SupplierOrders = () => {
                 />
               </div>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-48">
-                  <SelectValue placeholder="Filtrar por status" />
+                <SelectTrigger className="w-48">
+                  <SelectValue placeholder="Todos os Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos os Status</SelectItem>
@@ -355,49 +196,134 @@ const SupplierOrders = () => {
                 </SelectContent>
               </Select>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Total</TableHead>
-                  <TableHead>Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.orderNumber}</TableCell>
-                    <TableCell>{order.customerName}</TableCell>
-                    <TableCell>{new Date(order.createdAt).toLocaleDateString('pt-BR')}</TableCell>
-                    <TableCell>
-                      <Badge className={getStatusColor(order.status)}>
-                        {getStatusIcon(order.status)}
-                        <span className="ml-1">{getStatusLabel(order.status)}</span>
-                      </Badge>
-                    </TableCell>
-                    <TableCell>R$ {order.total.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setSelectedOrder(order)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        Ver Detalhes
-                      </Button>
-                    </TableCell>
+
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Número</TableHead>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Total</TableHead>
+                    <TableHead>Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredOrders.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        Nenhum pedido encontrado
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredOrders.map((order: any) => (
+                      <TableRow key={order.id}>
+                        <TableCell className="font-medium">{order.orderNumber}</TableCell>
+                        <TableCell>
+                          {format(new Date(order.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(order.status)}>
+                            <span className="flex items-center gap-1">
+                              {getStatusIcon(order.status)}
+                              {getStatusLabel(order.status)}
+                            </span>
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          R$ {order.total.toFixed(2)}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setSelectedOrderId(order.id)}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            Ver Detalhes
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
+
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Detalhes do Pedido {selectedOrder.orderNumber}</CardTitle>
+                <Button variant="ghost" onClick={() => setSelectedOrderId(null)}>
+                  ✕
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <Badge className={getStatusColor(selectedOrder.status)}>
+                    {getStatusLabel(selectedOrder.status)}
+                  </Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Data do Pedido</p>
+                  <p className="font-medium">
+                    {format(new Date(selectedOrder.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Endereço de Entrega</h3>
+                <div className="bg-muted p-4 rounded-lg">
+                  <p>{selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.number}</p>
+                  {selectedOrder.shippingAddress.complement && (
+                    <p>{selectedOrder.shippingAddress.complement}</p>
+                  )}
+                  <p>{selectedOrder.shippingAddress.neighborhood}</p>
+                  <p>{selectedOrder.shippingAddress.city} - {selectedOrder.shippingAddress.state}</p>
+                  <p>CEP: {selectedOrder.shippingAddress.zip_code || selectedOrder.shippingAddress.zipCode}</p>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Itens do Pedido</h3>
+                <div className="space-y-2">
+                  {selectedOrder.items.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex items-center gap-3">
+                        {item.image && (
+                          <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
+                        )}
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          {item.sku && <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>}
+                          <p className="text-sm text-muted-foreground">Qtd: {item.quantity}</p>
+                        </div>
+                      </div>
+                      <p className="font-semibold">R$ {(item.price * item.quantity).toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between text-lg font-bold">
+                  <span>Total</span>
+                  <span>R$ {selectedOrder.total.toFixed(2)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
