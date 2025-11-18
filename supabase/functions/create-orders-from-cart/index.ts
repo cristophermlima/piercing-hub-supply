@@ -48,8 +48,9 @@ serve(async (req) => {
       }
     );
 
-    // Verificar autenticação
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
+    // Verificar autenticação usando o token do header (Deno não mantém sessão)
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
     
     console.log('Auth check:', {
       userExists: !!user,
