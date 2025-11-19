@@ -1,145 +1,113 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
-import { TrendingUp, TrendingDown, DollarSign, Package, Users, Calendar, Download } from 'lucide-react';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Download, DollarSign, Package, Users, Loader2 } from 'lucide-react';
+import SupplierHeader from '@/components/SupplierHeader';
+import { useSupplierReports } from '@/hooks/useSupplierReports';
+
+const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#9CA3AF', '#D1D5DB'];
 
 const SupplierReports = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('30days');
+  const [selectedPeriod, setSelectedPeriod] = useState('30d');
+  const { reportData, isLoading } = useSupplierReports(selectedPeriod);
 
-  // Dados fictícios para os gráficos
-  const salesData = [
-    { month: 'Jan', vendas: 12450, pedidos: 28 },
-    { month: 'Fev', vendas: 15200, pedidos: 35 },
-    { month: 'Mar', vendas: 18750, pedidos: 42 },
-    { month: 'Abr', vendas: 16800, pedidos: 38 },
-    { month: 'Mai', vendas: 22100, pedidos: 51 },
-    { month: 'Jun', vendas: 25400, pedidos: 58 }
-  ];
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <SupplierHeader />
+        <div className="max-w-7xl mx-auto px-4 py-8 flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
 
-  const productPerformance = [
-    { name: 'Labret Titânio', value: 35, vendas: 145 },
-    { name: 'Argola Segmento', value: 25, vendas: 98 },
-    { name: 'Barbell Curvo', value: 20, vendas: 76 },
-    { name: 'Plugs', value: 12, vendas: 45 },
-    { name: 'Outros', value: 8, vendas: 28 }
-  ];
-
-  const topCustomers = [
-    { name: 'Studio Piercing Arte', pedidos: 15, total: 4250.00, ultimoPedido: '2024-01-20' },
-    { name: 'Body Art Professional', pedidos: 12, total: 3890.00, ultimoPedido: '2024-01-19' },
-    { name: 'Piercer Pro Studio', pedidos: 10, total: 3200.00, ultimoPedido: '2024-01-18' },
-    { name: 'Arte Corporal Ltda', pedidos: 8, total: 2750.00, ultimoPedido: '2024-01-17' },
-    { name: 'ModBody Studio', pedidos: 7, total: 2100.00, ultimoPedido: '2024-01-16' }
-  ];
-
-  const COLORS = ['#000000', '#374151', '#6B7280', '#9CA3AF', '#D1D5DB'];
-
-  const exportReport = (type: string) => {
-    console.log(`Exportando relatório: ${type}`);
-    // Aqui implementaríamos a exportação
-  };
+  if (!reportData) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <SupplierHeader />
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <p className="text-center text-muted-foreground">Nenhum dado disponível</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-black text-white shadow-md">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold">Relatórios e Analytics</h1>
-            <div className="flex items-center space-x-4">
-              <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-                <SelectTrigger className="w-48 bg-white text-black">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7days">Últimos 7 dias</SelectItem>
-                  <SelectItem value="30days">Últimos 30 dias</SelectItem>
-                  <SelectItem value="90days">Últimos 90 dias</SelectItem>
-                  <SelectItem value="year">Este ano</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button variant="outline" onClick={() => exportReport('pdf')}>
-                <Download className="h-4 w-4 mr-2" />
-                Exportar PDF
-              </Button>
-            </div>
+      <SupplierHeader />
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Relatórios e Analytics</h1>
+          <div className="flex gap-4">
+            <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="7d">Últimos 7 dias</SelectItem>
+                <SelectItem value="30d">Últimos 30 dias</SelectItem>
+                <SelectItem value="90d">Últimos 90 dias</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button variant="outline" onClick={() => alert('Exportar PDF em desenvolvimento')}>
+              <Download className="h-4 w-4 mr-2" />
+              Exportar PDF
+            </Button>
           </div>
         </div>
-      </header>
-
-      <div className="container mx-auto px-4 py-8">
         {/* KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Receita Total</p>
-                  <p className="text-2xl font-bold">R$ 127.450</p>
-                  <div className="flex items-center mt-1">
-                    <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                    <span className="text-sm text-green-600">+12.5%</span>
-                  </div>
-                </div>
-                <DollarSign className="h-8 w-8 text-green-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Receita Total</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(reportData.totalRevenue)}
               </div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Total de Pedidos</p>
-                  <p className="text-2xl font-bold">284</p>
-                  <div className="flex items-center mt-1">
-                    <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                    <span className="text-sm text-green-600">+8.2%</span>
-                  </div>
-                </div>
-                <Package className="h-8 w-8 text-blue-600" />
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
+              <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{reportData.totalOrders}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Clientes Ativos</p>
-                  <p className="text-2xl font-bold">47</p>
-                  <div className="flex items-center mt-1">
-                    <TrendingDown className="h-4 w-4 text-red-600 mr-1" />
-                    <span className="text-sm text-red-600">-2.1%</span>
-                  </div>
-                </div>
-                <Users className="h-8 w-8 text-purple-600" />
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Clientes Ativos</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{reportData.totalCustomers}</div>
             </CardContent>
           </Card>
-          
+
           <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Ticket Médio</p>
-                  <p className="text-2xl font-bold">R$ 448</p>
-                  <div className="flex items-center mt-1">
-                    <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                    <span className="text-sm text-green-600">+4.7%</span>
-                  </div>
-                </div>
-                <Calendar className="h-8 w-8 text-orange-600" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ticket Médio</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(reportData.averageTicket)}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Gráficos */}
+        {/* Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           <Card>
             <CardHeader>
@@ -147,18 +115,19 @@ const SupplierReports = () => {
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={salesData}>
+                <LineChart data={reportData.salesEvolution}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <XAxis dataKey="date" />
                   <YAxis />
-                  <Tooltip 
-                    formatter={(value, name) => [
-                      name === 'vendas' ? `R$ ${value}` : value,
-                      name === 'vendas' ? 'Vendas' : 'Pedidos'
-                    ]}
+                  <Tooltip />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="value" 
+                    stroke="hsl(var(--primary))" 
+                    strokeWidth={2}
+                    name="Vendas (R$)"
                   />
-                  <Line type="monotone" dataKey="vendas" stroke="#000000" strokeWidth={2} />
-                  <Line type="monotone" dataKey="pedidos" stroke="#6B7280" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -172,16 +141,16 @@ const SupplierReports = () => {
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
-                    data={productPerformance}
+                    data={reportData.topProducts}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name }) => name}
                     outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
+                    fill="hsl(var(--primary))"
+                    dataKey="revenue"
                   >
-                    {productPerformance.map((entry, index) => (
+                    {reportData.topProducts.map((entry: any, index: number) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
@@ -192,68 +161,8 @@ const SupplierReports = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Vendas por Mês */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Vendas Mensais</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={salesData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => [`R$ ${value}`, 'Vendas']} />
-                  <Bar dataKey="vendas" fill="#000000" />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-
-          {/* Top Clientes */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Principais Clientes</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Pedidos</TableHead>
-                    <TableHead>Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {topCustomers.map((customer, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{customer.name}</div>
-                          <div className="text-sm text-gray-500">
-                            Último: {new Date(customer.ultimoPedido).toLocaleDateString('pt-BR')}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {customer.pedidos}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        R$ {customer.total.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Produtos Mais Vendidos */}
-        <Card className="mt-6">
+        {/* Top Products */}
+        <Card className="mb-8">
           <CardHeader>
             <CardTitle>Produtos Mais Vendidos</CardTitle>
           </CardHeader>
@@ -262,32 +171,53 @@ const SupplierReports = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Produto</TableHead>
-                  <TableHead>Quantidade Vendida</TableHead>
-                  <TableHead>% do Total</TableHead>
-                  <TableHead>Receita</TableHead>
+                  <TableHead className="text-right">Receita</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {productPerformance.map((product, index) => (
+                {reportData.topProducts.map((product: any, index: number) => (
                   <TableRow key={index}>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell>{product.vendas}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
-                          <div 
-                            className="bg-black h-2 rounded-full" 
-                            style={{ width: `${product.value}%` }}
-                          ></div>
-                        </div>
-                        {product.value}%
-                      </div>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell className="text-right">
+                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(product.revenue)}
                     </TableCell>
-                    <TableCell>R$ {(product.vendas * 65).toFixed(2)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        {/* Top Customers */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Principais Clientes</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {reportData.topCustomers.length > 0 ? (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente ID</TableHead>
+                    <TableHead>Pedidos</TableHead>
+                    <TableHead className="text-right">Total</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {reportData.topCustomers.map((customer: any, index: number) => (
+                    <TableRow key={index}>
+                      <TableCell className="font-medium">{customer.id.slice(0, 8)}...</TableCell>
+                      <TableCell>{customer.orderCount}</TableCell>
+                      <TableCell className="text-right">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(customer.totalSpent)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">Nenhum cliente no período</p>
+            )}
           </CardContent>
         </Card>
       </div>
