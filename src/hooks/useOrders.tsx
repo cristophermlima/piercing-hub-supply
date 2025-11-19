@@ -98,16 +98,28 @@ export const useSupplierOrders = () => {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ['supplier-orders', user?.id],
     queryFn: async () => {
-      if (!user) return [];
+      if (!user) {
+        console.log('🔴 [SUPPLIER ORDERS] Sem usuário');
+        return [];
+      }
+
+      console.log('🔍 [SUPPLIER ORDERS] Buscando supplier para user_id:', user.id);
 
       // Primeiro buscar o supplier_id do usuário
-      const { data: supplier } = await supabase
+      const { data: supplier, error: supplierError } = await supabase
         .from('suppliers')
         .select('id')
         .eq('user_id', user.id)
         .single();
 
-      if (!supplier) return [];
+      console.log('📊 [SUPPLIER ORDERS] Supplier encontrado:', supplier, 'Error:', supplierError);
+
+      if (!supplier) {
+        console.log('🔴 [SUPPLIER ORDERS] Nenhum supplier encontrado para este usuário');
+        return [];
+      }
+
+      console.log('🔍 [SUPPLIER ORDERS] Buscando pedidos para supplier_id:', supplier.id);
 
       const { data, error } = await supabase
         .from('order_items')
@@ -130,7 +142,12 @@ export const useSupplierOrders = () => {
         .eq('supplier_id', supplier.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      console.log('📦 [SUPPLIER ORDERS] Pedidos encontrados:', data?.length || 0, 'Error:', error);
+
+      if (error) {
+        console.error('❌ [SUPPLIER ORDERS] Erro ao buscar pedidos:', error);
+        throw error;
+      }
       return data as any;
     },
     enabled: !!user,
