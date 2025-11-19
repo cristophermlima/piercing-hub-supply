@@ -9,6 +9,7 @@ import { Search, Eye, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lu
 import { useSupplierOrders } from '@/hooks/useOrders';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import SupplierHeader from '@/components/SupplierHeader';
 
 const SupplierOrders = () => {
   const { orders: orderItems = [], isLoading } = useSupplierOrders();
@@ -102,9 +103,10 @@ const SupplierOrders = () => {
   }, {} as Record<string, number>);
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background p-8">
-        <div className="max-w-7xl mx-auto">
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <SupplierHeader />
+      <div className="max-w-7xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Gestão de Pedidos</h1>
           <p>Carregando pedidos...</p>
         </div>
