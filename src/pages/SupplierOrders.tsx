@@ -102,11 +102,16 @@ const SupplierOrders = () => {
     return acc;
   }, {} as Record<string, number>);
 
+  console.log('📊 [DEBUG] Orders array:', orders);
+  console.log('📊 [DEBUG] Order items recebidos:', orderItems);
+  console.log('📊 [DEBUG] Grouped orders:', groupedOrders);
+  console.log('📊 [DEBUG] Filtered orders:', filteredOrders);
+
   if (isLoading) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <SupplierHeader />
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <SupplierHeader />
+        <div className="max-w-7xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Gestão de Pedidos</h1>
           <p>Carregando pedidos...</p>
         </div>
