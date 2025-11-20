@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Eye, Package, Truck, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Search, Eye, Clock, AlertCircle } from 'lucide-react';
 import { useSupplierOrders } from '@/hooks/useOrders';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import SupplierHeader from '@/components/SupplierHeader';
+import OrderDetailsDialog from '@/components/supplier/OrderDetailsDialog';
+import OrderStatusCards from '@/components/supplier/OrderStatusCards';
 
 const SupplierOrders = () => {
-  const { orders: orderItems = [], isLoading } = useSupplierOrders();
+  const { orders: orderItems = [], isLoading, updateStatus, updateTracking } = useSupplierOrders();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -28,6 +30,9 @@ const SupplierOrders = () => {
         total: item.orders.total_amount,
         createdAt: item.orders.created_at,
         shippingAddress: JSON.parse(item.orders.shipping_address),
+        customerName: item.orders.customer_name,
+        customerPhone: item.orders.customer_phone,
+        customerEmail: item.orders.customer_email,
         items: []
       };
     }
@@ -49,11 +54,11 @@ const SupplierOrders = () => {
       case 'pending':
         return <Clock className="h-4 w-4" />;
       case 'processing':
-        return <Package className="h-4 w-4" />;
+        return <Clock className="h-4 w-4" />;
       case 'shipped':
-        return <Truck className="h-4 w-4" />;
+        return <Clock className="h-4 w-4" />;
       case 'delivered':
-        return <CheckCircle className="h-4 w-4" />;
+        return <Clock className="h-4 w-4" />;
       case 'cancelled':
         return <AlertCircle className="h-4 w-4" />;
       default:
@@ -97,19 +102,14 @@ const SupplierOrders = () => {
 
   const selectedOrder: any = orders.find((order: any) => order.id === selectedOrderId);
 
-  const statusCounts = orders.reduce((acc: Record<string, number>, order: any) => {
+  const statusCounts = orders.reduce<Record<string, number>>((acc, order: any) => {
     acc[order.status] = (acc[order.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  console.log('📊 [DEBUG] Orders array:', orders);
-  console.log('📊 [DEBUG] Order items recebidos:', orderItems);
-  console.log('📊 [DEBUG] Grouped orders:', groupedOrders);
-  console.log('📊 [DEBUG] Filtered orders:', filteredOrders);
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <SupplierHeader />
         <div className="max-w-7xl mx-auto px-4 py-8">
           <h1 className="text-3xl font-bold mb-8">Gestão de Pedidos</h1>
@@ -120,59 +120,12 @@ const SupplierOrders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background p-8">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-background">
+      <SupplierHeader />
+      <div className="max-w-7xl mx-auto p-4 md:p-8 space-y-8">
         <h1 className="text-3xl font-bold">Gestão de Pedidos</h1>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Pedidos Pendentes</p>
-                  <p className="text-2xl font-bold">{statusCounts['pending'] || 0}</p>
-                </div>
-                <Clock className="h-8 w-8 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Em Processamento</p>
-                  <p className="text-2xl font-bold">{statusCounts['processing'] || 0}</p>
-                </div>
-                <Package className="h-8 w-8 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Enviados</p>
-                  <p className="text-2xl font-bold">{statusCounts['shipped'] || 0}</p>
-                </div>
-                <Truck className="h-8 w-8 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Entregues</p>
-                  <p className="text-2xl font-bold">{statusCounts['delivered'] || 0}</p>
-                </div>
-                <CheckCircle className="h-8 w-8 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        <OrderStatusCards statusCounts={statusCounts} />
 
         <Card>
           <CardHeader>
@@ -260,77 +213,15 @@ const SupplierOrders = () => {
         </Card>
       </div>
 
-      {selectedOrder && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Detalhes do Pedido {selectedOrder.orderNumber}</CardTitle>
-                <Button variant="ghost" onClick={() => setSelectedOrderId(null)}>
-                  ✕
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
-                  <Badge className={getStatusColor(selectedOrder.status)}>
-                    {getStatusLabel(selectedOrder.status)}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Data do Pedido</p>
-                  <p className="font-medium">
-                    {format(new Date(selectedOrder.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Endereço de Entrega</h3>
-                <div className="bg-muted p-4 rounded-lg">
-                  <p>{selectedOrder.shippingAddress.street}, {selectedOrder.shippingAddress.number}</p>
-                  {selectedOrder.shippingAddress.complement && (
-                    <p>{selectedOrder.shippingAddress.complement}</p>
-                  )}
-                  <p>{selectedOrder.shippingAddress.neighborhood}</p>
-                  <p>{selectedOrder.shippingAddress.city} - {selectedOrder.shippingAddress.state}</p>
-                  <p>CEP: {selectedOrder.shippingAddress.zip_code || selectedOrder.shippingAddress.zipCode}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">Itens do Pedido</h3>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item: any) => (
-                    <div key={item.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                      <div className="flex items-center gap-3">
-                        {item.image && (
-                          <img src={item.image} alt={item.name} className="w-12 h-12 object-cover rounded" />
-                        )}
-                        <div>
-                          <p className="font-medium">{item.name}</p>
-                          {item.sku && <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>}
-                          <p className="text-sm text-muted-foreground">Qtd: {item.quantity}</p>
-                        </div>
-                      </div>
-                      <p className="font-semibold">R$ {(item.price * item.quantity).toFixed(2)}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="border-t pt-4">
-                <div className="flex items-center justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span>R$ {selectedOrder.total.toFixed(2)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      <OrderDetailsDialog
+        order={selectedOrder}
+        open={!!selectedOrderId}
+        onClose={() => setSelectedOrderId(null)}
+        onUpdateStatus={(orderId, status) => updateStatus({ orderId, status })}
+        onUpdateTracking={(orderId, trackingCode) => updateTracking({ orderId, trackingCode })}
+        getStatusColor={getStatusColor}
+        getStatusLabel={getStatusLabel}
+      />
     </div>
   );
 };
