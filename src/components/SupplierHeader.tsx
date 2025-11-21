@@ -53,16 +53,16 @@ const SupplierHeader = () => {
   ];
 
   return (
-    <header className="bg-white border-b border-gray-200 shadow-sm">
+    <header className="bg-card border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome da Empresa */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Package className="h-5 w-5 text-white" />
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Package className="h-5 w-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-gray-900">
+              <span className="text-xl font-bold text-foreground">
                 {profile?.full_name || 'Minha Loja'}
               </span>
             </div>
@@ -79,9 +79,7 @@ const SupplierHeader = () => {
                   key={item.path}
                   variant={isActive ? "default" : "ghost"}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center space-x-2 ${
-                    isActive ? 'bg-blue-600 text-white' : 'text-gray-600 hover:text-gray-900'
-                  }`}
+                  className="flex items-center space-x-2"
                 >
                   <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
@@ -104,7 +102,7 @@ const SupplierHeader = () => {
             <Button
               variant="ghost"
               onClick={handleSignOut}
-              className="flex items-center space-x-2 text-red-600 hover:text-red-700"
+              className="flex items-center space-x-2 text-destructive hover:text-destructive/90"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden md:block">Sair</span>

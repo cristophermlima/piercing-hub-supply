@@ -136,6 +136,9 @@ export const useSupplierOrders = () => {
             status,
             total_amount,
             shipping_address,
+            customer_name,
+            customer_phone,
+            customer_email,
             created_at
           )
         `)
