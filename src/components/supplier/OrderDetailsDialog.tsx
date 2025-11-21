@@ -29,9 +29,16 @@ const OrderDetailsDialog = ({
   getStatusColor,
   getStatusLabel
 }: OrderDetailsDialogProps) => {
-  const [newStatus, setNewStatus] = useState(order?.status || '');
+  const [newStatus, setNewStatus] = useState('');
   const [trackingCode, setTrackingCode] = useState('');
   const [notes, setNotes] = useState('');
+
+  // Atualizar newStatus quando order mudar
+  React.useEffect(() => {
+    if (order?.status) {
+      setNewStatus(order.status);
+    }
+  }, [order?.status]);
 
   if (!order) return null;
 
