@@ -159,12 +159,21 @@ export const useSupplierOrders = () => {
   // Atualizar status do pedido
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, status }: { orderId: string; status: string }) => {
-      const { error } = await supabase
+      // Atualizar na tabela orders
+      const { error: orderError } = await supabase
         .from('orders')
         .update({ status })
         .eq('id', orderId);
 
-      if (error) throw error;
+      if (orderError) throw orderError;
+
+      // Atualizar também nos order_items para sincronizar
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .update({ status })
+        .eq('order_id', orderId);
+
+      if (itemsError) throw itemsError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supplier-orders'] });
