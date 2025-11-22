@@ -60,7 +60,7 @@ const SupplierHeader = () => {
           {/* Logo e Nome da Empresa */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
-              <img src={logo} alt="PiercerHub Logo" className="h-8 w-auto" />
+              <img src={logo} alt="PiercerHub Logo" className="h-14 w-auto" />
               <span className="text-xl font-bold text-foreground">
                 {profile?.full_name || 'Minha Loja'}
               </span>

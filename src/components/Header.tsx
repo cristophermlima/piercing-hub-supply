@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
               className="flex items-center space-x-2 cursor-pointer" 
               onClick={() => navigate('/')}
             >
-              <img src={logo} alt="PiercerHub Logo" className="h-10 w-auto" />
+              <img src={logo} alt="PiercerHub Logo" className="h-16 w-auto" />
             </div>
           </div>
 
