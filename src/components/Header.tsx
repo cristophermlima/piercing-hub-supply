@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { ShoppingCart, Search, User, LogOut, UserCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import logo from '@/assets/logo.png';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,9 +34,12 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-black cursor-pointer" onClick={() => navigate('/')}>
-              PiercerHub
-            </h1>
+            <div 
+              className="flex items-center space-x-2 cursor-pointer" 
+              onClick={() => navigate('/')}
+            >
+              <img src={logo} alt="PiercerHub Logo" className="h-10 w-auto" />
+            </div>
           </div>
 
           <div className="flex-1 max-w-md mx-8">
