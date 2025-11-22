@@ -33,17 +33,19 @@ const OrderDetailsDialog = ({
   const [trackingCode, setTrackingCode] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Atualizar newStatus quando order mudar
+  // Sincronizar status local com o status dos items do pedido
   React.useEffect(() => {
-    if (order?.status) {
-      setNewStatus(order.status);
+    const itemStatus = order?.items?.[0]?.status;
+    if (itemStatus) {
+      setNewStatus(itemStatus);
     }
-  }, [order?.status]);
+  }, [order?.items]);
 
   if (!order) return null;
 
   const handleStatusUpdate = () => {
-    if (newStatus && newStatus !== order.status) {
+    const currentStatus = order.items?.[0]?.status;
+    if (newStatus && newStatus !== currentStatus) {
       onUpdateStatus(order.id, newStatus);
     }
   };
@@ -61,8 +63,8 @@ const OrderDetailsDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
             <span>Pedido #{order.orderNumber}</span>
-            <Badge className={getStatusColor(order.status)}>
-              {getStatusLabel(order.status)}
+            <Badge className={getStatusColor(order.items?.[0]?.status || order.status)}>
+              {getStatusLabel(order.items?.[0]?.status || order.status)}
             </Badge>
           </DialogTitle>
         </DialogHeader>

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useNavigate, useLocation } from 'react-router-dom';
+import logo from '@/assets/logo.png';
 import { 
   LayoutDashboard, 
   Package, 
@@ -58,10 +59,8 @@ const SupplierHeader = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome da Empresa */}
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Package className="h-5 w-5 text-primary-foreground" />
-              </div>
+            <div className="flex items-center space-x-3">
+              <img src={logo} alt="PiercerHub Logo" className="h-8 w-auto" />
               <span className="text-xl font-bold text-foreground">
                 {profile?.full_name || 'Minha Loja'}
               </span>
