@@ -21,8 +21,8 @@ interface ShippingOption {
   carrier: string;
   serviceCode: string;
   serviceDescription: string;
-  price: number;
-  deliveryTime: number;
+  price: string;
+  deliveryTime: string;
 }
 
 export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
@@ -111,7 +111,7 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
     createOrders({
       ...formData,
       shippingMethod: selectedOption?.serviceDescription || '',
-      shippingCost: selectedOption?.price || 0,
+      shippingCost: selectedOption ? parseFloat(selectedOption.price) : 0,
     });
     onOpenChange(false);
   };
@@ -273,7 +273,7 @@ export const CheckoutDialog = ({ open, onOpenChange }: CheckoutDialogProps) => {
                 <SelectContent>
                   {shippingOptions.map((option) => (
                     <SelectItem key={option.serviceCode} value={option.serviceCode}>
-                      {option.serviceDescription} - R$ {option.price.toFixed(2)} 
+                      {option.serviceDescription} - R$ {parseFloat(option.price).toFixed(2)} 
                       ({option.deliveryTime} dias úteis)
                     </SelectItem>
                   ))}
