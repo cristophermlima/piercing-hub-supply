@@ -11,6 +11,10 @@ export interface Profile {
   user_type: 'buyer' | 'supplier';
   created_at: string;
   updated_at: string;
+  cpf_cnpj?: string;
+  phone_number?: string;
+  certificate_url?: string;
+  certificate_approved?: boolean;
 }
 
 export const useProfile = () => {

@@ -130,6 +130,21 @@ const Registration = () => {
               <Label htmlFor="email">E-mail</Label>
               <Input id="email" name="email" type="email" placeholder="seu@email.com" required />
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone_number">Telefone</Label>
+              <Input id="phone_number" name="phone_number" placeholder="(00) 00000-0000" required />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="cpf_cnpj">{userType === 'piercer' ? 'CPF' : 'CNPJ'}</Label>
+              <Input 
+                id="cpf_cnpj" 
+                name="cpf_cnpj" 
+                placeholder={userType === 'piercer' ? '000.000.000-00' : '00.000.000/0000-00'} 
+                required 
+              />
+            </div>
             
             {userType === 'supplier' && (
               <div className="space-y-2">
@@ -137,11 +152,6 @@ const Registration = () => {
                 <Input id="fantasy_name" name="fantasy_name" placeholder="Nome da sua empresa" />
               </div>
             )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="cnpj">CNPJ</Label>
-              <Input id="cnpj" name="cnpj" placeholder="00.000.000/0000-00" required />
-            </div>
             
             {userType === 'supplier' && (
               <>
@@ -157,12 +167,23 @@ const Registration = () => {
               </>
             )}
             
-            <div className="space-y-2">
-              <Label htmlFor="certificate">
-                {userType === 'piercer' ? 'Certificado de Body Piercer' : 'Certificado da Empresa'}
-              </Label>
-              <Input id="certificate" name="certificate" type="file" accept=".pdf,.jpg,.png" />
-            </div>
+            {userType === 'piercer' && (
+              <div className="space-y-2">
+                <Label htmlFor="certificate">
+                  Certificado de Body Piercer *
+                  <span className="text-xs text-muted-foreground block mt-1">
+                    Obrigatório para liberação de compras
+                  </span>
+                </Label>
+                <Input 
+                  id="certificate" 
+                  name="certificate" 
+                  type="file" 
+                  accept=".pdf,.jpg,.png,.jpeg" 
+                  required 
+                />
+              </div>
+            )}
             
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
