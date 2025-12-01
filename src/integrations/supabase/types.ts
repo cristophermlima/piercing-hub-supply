@@ -256,28 +256,40 @@ export type Database = {
       }
       profiles: {
         Row: {
+          certificate_approved: boolean | null
+          certificate_url: string | null
+          cpf_cnpj: string | null
           created_at: string
           full_name: string | null
           id: string
           phone: string | null
+          phone_number: string | null
           updated_at: string
           user_id: string
           user_type: string
         }
         Insert: {
+          certificate_approved?: boolean | null
+          certificate_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           phone?: string | null
+          phone_number?: string | null
           updated_at?: string
           user_id: string
           user_type: string
         }
         Update: {
+          certificate_approved?: boolean | null
+          certificate_url?: string | null
+          cpf_cnpj?: string | null
           created_at?: string
           full_name?: string | null
           id?: string
           phone?: string | null
+          phone_number?: string | null
           updated_at?: string
           user_id?: string
           user_type?: string
