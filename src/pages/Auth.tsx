@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { User, Building2, ArrowLeft } from 'lucide-react';
+import logo from '@/assets/logo.png';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -81,10 +82,11 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center mb-6">
+        <div className="flex items-center justify-center mb-6">
           <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
+          <img src={logo} alt="PiercerHub Logo" className="h-12 w-auto mr-3" />
           <h1 className="text-2xl font-bold">PiercerHub</h1>
         </div>
 
@@ -123,7 +125,7 @@ const Auth = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full bg-black hover:bg-gray-800"
+                    className="w-full bg-primary hover:bg-primary/90"
                     disabled={isLoading}
                   >
                     {isLoading ? 'Entrando...' : 'Entrar'}
@@ -218,7 +220,7 @@ const SignUpForm = ({ onSubmit, isLoading }: { onSubmit: (e: React.FormEvent<HTM
 
           <Button
             type="submit"
-            className="w-full bg-black hover:bg-gray-800"
+            className="w-full bg-primary hover:bg-primary/90"
             disabled={isLoading}
           >
             {isLoading ? 'Cadastrando...' : 'Cadastrar'}

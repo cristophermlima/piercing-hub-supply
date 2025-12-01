@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart, Users, Shield, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import logo from '@/assets/logo.png';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -25,9 +26,12 @@ const Index = () => {
       <header className="bg-black/50 backdrop-blur-sm border-b border-gray-700">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <h1 className="text-2xl font-bold text-white">PiercerHub</h1>
-              <span className="text-sm text-gray-300">Marketplace</span>
+            <div className="flex items-center space-x-3">
+              <img src={logo} alt="PiercerHub Logo" className="h-12 w-auto" />
+              <div>
+                <h1 className="text-2xl font-bold text-white">PiercerHub</h1>
+                <span className="text-sm text-primary">Marketplace</span>
+              </div>
             </div>
             
             <div className="flex items-center space-x-4">
@@ -40,7 +44,7 @@ const Index = () => {
               </Button>
               <Button 
                 onClick={() => navigate('/auth')}
-                className="bg-white text-black hover:bg-gray-200"
+                className="bg-primary text-white hover:bg-primary/90"
               >
                 Entrar
               </Button>
@@ -63,7 +67,7 @@ const Index = () => {
             <Button 
               size="lg" 
               onClick={() => navigate('/auth')}
-              className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg"
+              className="bg-primary text-white hover:bg-primary/90 px-8 py-3 text-lg"
             >
               Começar Agora
             </Button>
@@ -89,7 +93,7 @@ const Index = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             <Card className="text-center">
               <CardContent className="p-6">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                   <Shield className="h-8 w-8 text-white" />
                 </div>
                 <h4 className="text-xl font-semibold mb-2">Profissionais Verificados</h4>
@@ -99,7 +103,7 @@ const Index = () => {
             
             <Card className="text-center">
               <CardContent className="p-6">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                   <Package className="h-8 w-8 text-white" />
                 </div>
                 <h4 className="text-xl font-semibold mb-2">Produtos Especializados</h4>
@@ -109,7 +113,7 @@ const Index = () => {
             
             <Card className="text-center">
               <CardContent className="p-6">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                   <ShoppingCart className="h-8 w-8 text-white" />
                 </div>
                 <h4 className="text-xl font-semibold mb-2">Compra Unificada</h4>
@@ -119,7 +123,7 @@ const Index = () => {
             
             <Card className="text-center">
               <CardContent className="p-6">
-                <div className="w-16 h-16 bg-black rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto mb-4">
                   <Users className="h-8 w-8 text-white" />
                 </div>
                 <h4 className="text-xl font-semibold mb-2">Comunidade</h4>
@@ -142,7 +146,7 @@ const Index = () => {
             <Button 
               size="lg"
               onClick={() => navigate('/auth')}
-              className="bg-white text-black hover:bg-gray-200"
+              className="bg-primary text-white hover:bg-primary/90"
             >
               Sou Body Piercer
             </Button>

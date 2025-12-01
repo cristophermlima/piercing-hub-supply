@@ -78,7 +78,7 @@ const SupplierDashboard = () => {
           </div>
           <Button 
             onClick={() => navigate('/supplier/products')}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-primary hover:bg-primary/90 text-white"
           >
             <Package className="h-4 w-4 mr-2" />
             Gerenciar Produtos
@@ -146,8 +146,8 @@ const SupplierDashboard = () => {
                 onClick={() => navigate('/supplier/products')}>
             <CardContent className="pt-6">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-blue-100 rounded-lg">
-                  <Package className="h-6 w-6 text-blue-600" />
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Package className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Gerenciar Produtos</h3>
@@ -176,8 +176,8 @@ const SupplierDashboard = () => {
                 onClick={() => navigate('/supplier/reports')}>
             <CardContent className="pt-6">
               <div className="flex items-center space-x-4">
-                <div className="p-3 bg-purple-100 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-purple-600" />
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <BarChart3 className="h-6 w-6 text-primary" />
                 </div>
                 <div>
                   <h3 className="font-semibold">Relatórios</h3>
@@ -209,7 +209,7 @@ const SupplierDashboard = () => {
                 <p className="text-gray-500 text-lg mb-4">Nenhum produto cadastrado</p>
                 <Button 
                   onClick={() => navigate('/supplier/products')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  className="bg-primary hover:bg-primary/90 text-white"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Adicionar Primeiro Produto

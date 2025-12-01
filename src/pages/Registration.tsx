@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, Building2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import logo from '@/assets/logo.png';
 
 const Registration = () => {
   const [userType, setUserType] = useState<'piercer' | 'supplier' | null>(null);
@@ -48,11 +49,12 @@ const Registration = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="w-full max-w-md space-y-6">
-          <div className="flex items-center">
+          <div className="flex items-center justify-center">
             <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="text-center flex-1">
+            <img src={logo} alt="PiercerHub Logo" className="h-12 w-auto mr-3" />
+            <div className="text-center">
               <h1 className="text-3xl font-bold">PiercerHub</h1>
               <p className="text-gray-600 mt-2">Escolha como deseja se cadastrar</p>
             </div>
@@ -110,11 +112,12 @@ const Registration = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <div className="flex items-center">
+          <div className="flex items-center justify-center">
             <Button variant="ghost" onClick={() => setUserType(null)} className="mr-2 p-2">
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <CardTitle className="text-center flex-1">
+            <img src={logo} alt="PiercerHub Logo" className="h-10 w-auto mr-2" />
+            <CardTitle className="text-center">
               Cadastro para {userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'}
             </CardTitle>
           </div>
@@ -192,7 +195,7 @@ const Registration = () => {
             
             <Button 
               type="submit" 
-              className="w-full bg-black hover:bg-gray-800"
+              className="w-full bg-primary hover:bg-primary/90"
               disabled={isLoading}
             >
               {isLoading ? 'Cadastrando...' : 'Cadastrar'}
