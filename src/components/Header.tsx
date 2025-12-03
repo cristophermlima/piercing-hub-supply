@@ -35,10 +35,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div 
-              className="flex items-center space-x-2 cursor-pointer" 
+              className="flex flex-col items-center cursor-pointer" 
               onClick={() => navigate('/')}
             >
-              <img src={logo} alt="PiercerHub Logo" className="h-16 w-auto" />
+              <img src={logo} alt="PiercerHub Logo" className="h-14 w-auto" />
+              <span className="text-xs text-primary font-semibold -mt-1">Marketplace</span>
             </div>
           </div>
 
@@ -58,7 +59,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              className="relative border-gray-600 text-white hover:bg-white/10"
+              className="relative border-gray-600 bg-gray-800 text-white hover:bg-gray-700"
               onClick={() => navigate('/cart')}
             >
               <ShoppingCart className="h-4 w-4" />
@@ -72,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center space-x-2 border-gray-600 text-white hover:bg-white/10">
+                  <Button variant="outline" className="flex items-center space-x-2 border-gray-600 bg-gray-800 text-white hover:bg-gray-700">
                     <UserCircle className="h-4 w-4" />
                     <span className="hidden md:inline">Minha Conta</span>
                   </Button>

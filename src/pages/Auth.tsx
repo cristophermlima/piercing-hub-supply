@@ -86,8 +86,10 @@ const Auth = () => {
           <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <img src={logo} alt="PiercerHub Logo" className="h-12 w-auto mr-3" />
-          <h1 className="text-2xl font-bold">PiercerHub</h1>
+          <div className="flex flex-col items-center">
+            <img src={logo} alt="PiercerHub Logo" className="h-16 w-auto" />
+            <span className="text-sm font-semibold text-primary -mt-1">Marketplace</span>
+          </div>
         </div>
 
         <Tabs defaultValue="signin" className="w-full">
