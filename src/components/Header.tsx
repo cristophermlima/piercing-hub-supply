@@ -35,11 +35,11 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div 
-              className="flex flex-col items-center cursor-pointer" 
+              className="flex items-center gap-3 cursor-pointer" 
               onClick={() => navigate('/')}
             >
-              <img src={logo} alt="PiercerHub Logo" className="h-14 w-auto" />
-              <span className="text-xs text-primary font-semibold -mt-1">Marketplace</span>
+              <img src={logo} alt="PiercerHub Logo" className="h-12 w-auto" />
+              <span className="text-lg text-primary font-semibold">Marketplace</span>
             </div>
           </div>
 
