@@ -54,14 +54,14 @@ const SupplierHeader = () => {
   ];
 
   return (
-    <header className="bg-card border-b border-border shadow-sm">
+    <header className="bg-gray-900 border-b border-gray-700 shadow-sm">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo e Nome da Empresa */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-3">
               <img src={logo} alt="PiercerHub Logo" className="h-14 w-auto" />
-              <span className="text-xl font-bold text-foreground">
+              <span className="text-xl font-bold text-white">
                 {profile?.full_name || 'Minha Loja'}
               </span>
             </div>
@@ -92,7 +92,7 @@ const SupplierHeader = () => {
             <Button
               variant="ghost"
               onClick={() => navigate('/profile')}
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-2 text-white hover:bg-white/10"
             >
               <User className="h-4 w-4" />
               <span className="hidden md:block">Perfil</span>
@@ -101,7 +101,7 @@ const SupplierHeader = () => {
             <Button
               variant="ghost"
               onClick={handleSignOut}
-              className="flex items-center space-x-2 text-destructive hover:text-destructive/90"
+              className="flex items-center space-x-2 text-primary hover:text-primary/90 hover:bg-white/10"
             >
               <LogOut className="h-4 w-4" />
               <span className="hidden md:block">Sair</span>

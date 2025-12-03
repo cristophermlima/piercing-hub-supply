@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
   };
 
   return (
-    <header className="bg-white shadow-sm border-b">
+    <header className="bg-gray-900 shadow-sm border-b border-gray-700">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
@@ -50,7 +50,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
                 placeholder="Buscar produtos..."
                 value={searchTerm}
                 onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white/10 border-gray-600 text-white placeholder:text-gray-400"
               />
             </div>
           </div>
@@ -58,12 +58,12 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
           <div className="flex items-center space-x-4">
             <Button
               variant="outline"
-              className="relative"
+              className="relative border-gray-600 text-white hover:bg-white/10"
               onClick={() => navigate('/cart')}
             >
               <ShoppingCart className="h-4 w-4" />
               {cartItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-2 -right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                   {cartItems}
                 </span>
               )}
@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="flex items-center space-x-2">
+                  <Button variant="outline" className="flex items-center space-x-2 border-gray-600 text-white hover:bg-white/10">
                     <UserCircle className="h-4 w-4" />
                     <span className="hidden md:inline">Minha Conta</span>
                   </Button>
@@ -94,7 +94,7 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button onClick={() => navigate('/auth')}>
+              <Button onClick={() => navigate('/auth')} className="bg-primary text-white hover:bg-primary/90">
                 <User className="h-4 w-4 mr-2" />
                 Entrar
               </Button>
