@@ -28,10 +28,7 @@ const Index = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <img src={logo} alt="PiercerHub Logo" className="h-12 w-auto" />
-              <div>
-                <h1 className="text-2xl font-bold text-white">PiercerHub</h1>
-                <span className="text-sm text-primary">Marketplace</span>
-              </div>
+              <span className="text-lg text-primary font-semibold">Marketplace</span>
             </div>
             
             <div className="flex items-center space-x-4">
