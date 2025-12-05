@@ -78,7 +78,11 @@ const SupplierHeader = () => {
                   key={item.path}
                   variant={isActive ? "default" : "ghost"}
                   onClick={() => navigate(item.path)}
-                  className="flex items-center space-x-2"
+                  className={`flex items-center space-x-2 ${
+                    isActive 
+                      ? '' 
+                      : 'bg-gray-700 text-white hover:bg-gray-600'
+                  }`}
                 >
                   <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
