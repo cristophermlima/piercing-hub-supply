@@ -81,7 +81,7 @@ const SupplierHeader = () => {
                   className={`flex items-center space-x-2 ${
                     isActive 
                       ? '' 
-                      : 'bg-gray-700 text-white hover:bg-gray-600'
+                      : 'text-white hover:bg-gray-700 hover:text-white'
                   }`}
                 >
                   <Icon className="h-4 w-4" />
