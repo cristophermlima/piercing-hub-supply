@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,9 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, X, Upload, Download, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { Plus, X, Upload, Download, FileText, AlertCircle, CheckCircle, Image as ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAddProduct } from '@/hooks/useProducts';
+import { supabase } from '@/integrations/supabase/client';
 
 // Mapeamento das categorias para UUIDs reais do banco de dados
 const CATEGORY_MAPPING = {
@@ -52,6 +53,8 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onClose, onSuccess }) =
   const [csvFile, setCsvFile] = useState<File | null>(null);
   const [csvPreviewData, setCsvPreviewData] = useState<any[]>([]);
   const [importing, setImporting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const addProduct = useAddProduct();
 
@@ -80,6 +83,52 @@ const AddProductForm: React.FC<AddProductFormProps> = ({ onClose, onSuccess }) =
 
   const removeImageUrl = (index: number) => {
     setImageUrls(imageUrls.filter((_, i) => i !== index));
+  };
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploadingImage(true);
+    
+    try {
+      for (const file of Array.from(files)) {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `products/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('product-images')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw uploadError;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('product-images')
+          .getPublicUrl(filePath);
+
+        setImageUrls(prev => [...prev, publicUrl]);
+      }
+
+      toast({
+        title: "Upload concluído!",
+        description: "Imagem(ns) adicionada(s) com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro no upload:', error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível fazer o upload da imagem.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
   };
 
   const downloadCsvTemplate = () => {
@@ -564,6 +613,32 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold">Imagens do Produto</h3>
                   
+                  {/* Upload de arquivo */}
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleImageUpload}
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                    />
+                    <div className="flex flex-col items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                        className="w-full"
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        {uploadingImage ? 'Enviando...' : 'Fazer Upload de Imagens'}
+                      </Button>
+                      <span className="text-sm text-muted-foreground">ou adicione via URL</span>
+                    </div>
+                  </div>
+
+                  {/* URL da imagem */}
                   <div className="flex gap-2">
                     <Input 
                       placeholder="URL da imagem"
@@ -575,21 +650,26 @@ Argola Ouro 18k,Argola em ouro 18k com fechamento segmento,Ouro 18k maciço com 
                     </Button>
                   </div>
 
+                  {/* Preview das imagens */}
                   {imageUrls.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       {imageUrls.map((url, index) => (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          Imagem {index + 1}
+                        <div key={index} className="relative group">
+                          <img 
+                            src={url} 
+                            alt={`Imagem ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border"
+                          />
                           <Button
                             type="button"
-                            variant="ghost"
+                            variant="destructive"
                             size="sm"
-                            className="h-auto p-0 text-red-500 hover:text-red-700"
+                            className="absolute top-1 right-1 h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
                             onClick={() => removeImageUrl(index)}
                           >
                             <X className="h-3 w-3" />
                           </Button>
-                        </Badge>
+                        </div>
                       ))}
                     </div>
                   )}
