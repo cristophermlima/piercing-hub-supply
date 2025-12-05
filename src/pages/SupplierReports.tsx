@@ -8,7 +8,7 @@ import { Download, DollarSign, Package, Users, Loader2 } from 'lucide-react';
 import SupplierHeader from '@/components/SupplierHeader';
 import { useSupplierReports } from '@/hooks/useSupplierReports';
 
-const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--accent))', '#9CA3AF', '#D1D5DB'];
+const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe'];
 
 const SupplierReports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('30d');
