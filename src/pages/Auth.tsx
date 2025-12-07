@@ -80,15 +80,15 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="flex items-center justify-center mb-6">
-          <Button variant="ghost" onClick={() => navigate('/')} className="mr-2">
+          <Button variant="ghost" onClick={() => navigate('/')} className="mr-2 text-white hover:bg-gray-700">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex flex-col items-center">
+          <div className="flex flex-col items-center bg-blue-600 p-3 rounded-lg">
             <img src={logo} alt="PiercerHub Logo" className="h-16 w-auto" />
-            <span className="text-sm font-semibold text-primary -mt-1">Marketplace</span>
+            <span className="text-sm font-semibold text-white -mt-1">Marketplace</span>
           </div>
         </div>
 
