@@ -86,9 +86,9 @@ const Auth = () => {
           <Button variant="ghost" onClick={() => navigate('/')} className="mr-2 text-white hover:bg-gray-700">
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="flex flex-col items-center bg-blue-600 p-3 rounded-lg">
+          <div className="flex flex-col items-center">
             <img src={logo} alt="PiercerHub Logo" className="h-16 w-auto" />
-            <span className="text-sm font-semibold text-white -mt-1">Marketplace</span>
+            <span className="text-sm font-semibold text-primary -mt-1">Marketplace</span>
           </div>
         </div>
 
