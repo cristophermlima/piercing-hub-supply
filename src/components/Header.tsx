@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, Search, User, LogOut, UserCircle } from 'lucide-react';
+import { ShoppingCart, Search, User, LogOut, UserCircle, Package } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import logo from '@/assets/logo.png';
@@ -82,6 +82,10 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
                   <DropdownMenuItem onClick={() => navigate('/profile')}>
                     <User className="h-4 w-4 mr-2" />
                     Meu Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                    <Package className="h-4 w-4 mr-2" />
+                    Meus Pedidos
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/marketplace')}>
                     <ShoppingCart className="h-4 w-4 mr-2" />
