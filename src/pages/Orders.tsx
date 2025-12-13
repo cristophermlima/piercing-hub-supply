@@ -79,7 +79,7 @@ const Orders = () => {
                             Quantidade: {item.quantity}
                           </p>
                         </div>
-                        <p className="font-semibold">R$ {item.total_price.toFixed(2)}</p>
+                        <p className="font-semibold">R$ {((item.price || 0) * item.quantity).toFixed(2)}</p>
                       </div>
                     ))}
                   </div>
