@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { useOrders } from '@/hooks/useOrders';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { Package, Loader2 } from 'lucide-react';
+import { Package, Loader2, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const statusLabels: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
   pending: { label: 'Pendente', variant: 'outline' },
@@ -16,6 +18,7 @@ const statusLabels: Record<string, { label: string; variant: 'default' | 'second
 
 const Orders = () => {
   const { orders, isLoading } = useOrders();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -29,6 +32,14 @@ const Orders = () => {
     <div className="min-h-screen bg-background py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="mb-8">
+          <Button
+            variant="ghost"
+            onClick={() => navigate('/marketplace')}
+            className="mb-4"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar ao Marketplace
+          </Button>
           <h1 className="text-3xl font-bold mb-2">Meus Pedidos</h1>
           <p className="text-muted-foreground">Acompanhe todos os seus pedidos</p>
         </div>
