@@ -1,24 +1,36 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ShoppingCart, Users, Shield, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
 import logo from '@/assets/logo.png';
 
 const Index = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { data: profile } = useProfile();
 
-  // Se o usuário está logado, redireciona para a página apropriada
+  // Se o usuário está logado e aprovado, redireciona para a página apropriada
   React.useEffect(() => {
-    if (user) {
-      // Por enquanto redirecionamos para o marketplace
-      // Futuramente podemos verificar o tipo de usuário e redirecionar apropriadamente
-      navigate('/marketplace');
+    if (user && profile?.certificate_approved) {
+      const userType = user.user_metadata?.user_type;
+      if (userType === 'supplier') {
+        navigate('/dashboard');
+      } else {
+        navigate('/marketplace');
+      }
+    } else if (user && !profile?.certificate_approved) {
+      // User logged but not approved
+      navigate('/pending-approval');
     }
-  }, [user, navigate]);
+  }, [user, profile, navigate]);
+
+  const handleCatalogClick = () => {
+    // Redirect to auth - catalog is only for approved users
+    navigate('/auth');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-800">
@@ -71,12 +83,16 @@ const Index = () => {
             <Button 
               variant="outline" 
               size="lg"
-              onClick={() => navigate('/marketplace')}
+              onClick={handleCatalogClick}
               className="border-white text-white hover:bg-white hover:text-black bg-transparent px-8 py-3 text-lg"
             >
               Ver Catálogo
             </Button>
           </div>
+          
+          <p className="text-sm text-gray-400 mt-4">
+            * Acesso exclusivo para profissionais cadastrados e aprovados
+          </p>
         </div>
       </section>
 
