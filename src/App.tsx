@@ -16,6 +16,7 @@ import SupplierOrders from "./pages/SupplierOrders";
 import SupplierReports from "./pages/SupplierReports";
 import SupplierProducts from "./pages/SupplierProducts";
 import Orders from "./pages/Orders";
+import PendingApproval from "./pages/PendingApproval";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const App = () => (
               <Route path="/cart" element={<Cart />} />
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/orders" element={<Orders />} />
+              <Route path="/pending-approval" element={<PendingApproval />} />
               <Route path="/dashboard" element={<SupplierDashboard />} />
               <Route path="/supplier/products" element={<SupplierProducts />} />
               <Route path="/supplier/orders" element={<SupplierOrders />} />

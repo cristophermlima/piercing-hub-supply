@@ -1,10 +1,13 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import FilterBar from '@/components/FilterBar';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
+import { useAuth } from '@/hooks/useAuth';
+import { useProfile } from '@/hooks/useProfile';
+import { Loader2 } from 'lucide-react';
 
 const Marketplace = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,8 +15,28 @@ const Marketplace = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedMaterial, setSelectedMaterial] = useState('');
 
-  const { data: products = [], isLoading } = useProducts();
+  const { data: products = [], isLoading: productsLoading } = useProducts();
   const { items: cartItems = [] } = useCart();
+  const { user, loading: authLoading } = useAuth();
+  const { data: profile, isLoading: profileLoading } = useProfile();
+  const navigate = useNavigate();
+
+  // Check authentication and approval status
+  useEffect(() => {
+    if (!authLoading && !profileLoading) {
+      // If not authenticated, redirect to auth
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      // If authenticated but not approved, redirect to pending approval
+      if (!profile?.certificate_approved) {
+        navigate('/pending-approval');
+        return;
+      }
+    }
+  }, [user, profile, authLoading, profileLoading, navigate]);
 
   // Filter products based on search and filters
   const filteredProducts = products.filter(product => {
@@ -41,7 +64,24 @@ const Marketplace = () => {
 
   const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
 
-  if (isLoading) {
+  // Show loading while checking auth/profile
+  if (authLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+          <p className="mt-4 text-gray-400">Verificando acesso...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not approved (will redirect)
+  if (!user || !profile?.certificate_approved) {
+    return null;
+  }
+
+  if (productsLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header 
