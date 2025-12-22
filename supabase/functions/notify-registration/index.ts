@@ -101,7 +101,7 @@ serve(async (req) => {
     // Send email via Resend
     const emailResponse = await resend.emails.send({
       from: "PiercerHub <onboarding@resend.dev>",
-      to: ["thiagomvilla@gmail.com"], // Admin email
+      to: ["mattheuslima0251@gmail.com"], // Admin email
       subject: `🆕 Novo Cadastro: ${userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'} - ${fullName}`,
       html: htmlContent,
     });
