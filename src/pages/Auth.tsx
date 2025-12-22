@@ -283,9 +283,9 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <Alert className="mb-4 border-amber-500/50 bg-amber-500/10">
-          <AlertCircle className="h-4 w-4 text-amber-500" />
-          <AlertDescription className="text-amber-200">
+        <Alert className="mb-4 border-primary bg-primary/20">
+          <AlertCircle className="h-4 w-4 text-primary" />
+          <AlertDescription className="text-foreground font-medium">
             Este é um marketplace exclusivo para profissionais de body piercing e fornecedores autorizados. 
             Todos os cadastros passam por análise e aprovação.
           </AlertDescription>
