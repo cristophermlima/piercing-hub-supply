@@ -1,9 +1,23 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { Resend } from "npm:resend@2.0.0";
+
+const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+interface RegistrationData {
+  fullName: string;
+  email: string;
+  userType: string;
+  cnpj?: string;
+  fantasyName?: string;
+  commercialContact?: string;
+  companyAddress?: string;
+  certificateUrl?: string;
+}
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -21,7 +35,7 @@ serve(async (req) => {
       commercialContact,
       companyAddress,
       certificateUrl 
-    } = await req.json();
+    }: RegistrationData = await req.json();
 
     console.log('Received registration notification request:', { 
       fullName, 
@@ -32,51 +46,73 @@ serve(async (req) => {
       certificateUrl 
     });
 
-    // Format phone number for WhatsApp API (remove non-digits and add country code)
-    const adminPhone = '5554991752129';
-    
-    // Build the message
-    let message = `🆕 *NOVO CADASTRO PARA APROVAÇÃO*\n\n`;
-    message += `📋 *Tipo:* ${userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'}\n`;
-    message += `👤 *Nome:* ${fullName}\n`;
-    message += `📧 *Email:* ${email}\n`;
-    message += `📄 *CPF/CNPJ:* ${cnpj || 'Não informado'}\n`;
+    // Build the email HTML
+    let htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h1 style="color: #333; border-bottom: 2px solid #4F46E5; padding-bottom: 10px;">
+          🆕 Novo Cadastro para Aprovação
+        </h1>
+        
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
+          <h2 style="color: #4F46E5; margin-top: 0;">Informações do Cadastro</h2>
+          
+          <p><strong>📋 Tipo:</strong> ${userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'}</p>
+          <p><strong>👤 Nome:</strong> ${fullName}</p>
+          <p><strong>📧 Email:</strong> ${email}</p>
+          <p><strong>📄 CPF/CNPJ:</strong> ${cnpj || 'Não informado'}</p>
+    `;
     
     if (userType === 'supplier') {
-      message += `🏢 *Nome Fantasia:* ${fantasyName || 'Não informado'}\n`;
-      message += `📞 *Contato Comercial:* ${commercialContact || 'Não informado'}\n`;
-      message += `📍 *Endereço:* ${companyAddress || 'Não informado'}\n`;
+      htmlContent += `
+          <p><strong>🏢 Nome Fantasia:</strong> ${fantasyName || 'Não informado'}</p>
+          <p><strong>📞 Contato Comercial:</strong> ${commercialContact || 'Não informado'}</p>
+          <p><strong>📍 Endereço:</strong> ${companyAddress || 'Não informado'}</p>
+      `;
     }
     
     if (certificateUrl) {
-      message += `\n📎 *Certificado:*\n${certificateUrl}\n`;
+      htmlContent += `
+          <div style="margin-top: 20px; padding: 15px; background-color: #e8f4fd; border-radius: 8px;">
+            <p><strong>📎 Certificado:</strong></p>
+            <a href="${certificateUrl}" style="color: #4F46E5; word-break: break-all;" target="_blank">
+              ${certificateUrl}
+            </a>
+          </div>
+      `;
     }
     
-    message += `\n⏰ *Data/Hora:* ${new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })}\n`;
-    message += `\n➡️ Acesse o painel para aprovar ou rejeitar este cadastro.`;
+    const brazilDate = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    
+    htmlContent += `
+        </div>
+        
+        <div style="background-color: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>⏰ Data/Hora:</strong> ${brazilDate}</p>
+        </div>
+        
+        <div style="background-color: #4F46E5; color: white; padding: 15px; border-radius: 8px; text-align: center;">
+          <p style="margin: 0;">➡️ Acesse o painel para aprovar ou rejeitar este cadastro.</p>
+        </div>
+      </div>
+    `;
 
-    // Send WhatsApp message via WhatsApp API
-    // Using CallMeBot free API for WhatsApp notifications
-    // Note: The admin needs to first activate the service by sending a message to the bot
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://api.callmebot.com/whatsapp.php?phone=${adminPhone}&text=${encodedMessage}&apikey=FREE`;
+    console.log('Sending email notification via Resend...');
     
-    console.log('Sending WhatsApp notification...');
-    
-    const whatsappResponse = await fetch(whatsappUrl);
-    const responseText = await whatsappResponse.text();
-    
-    console.log('WhatsApp API response:', responseText);
+    // Send email via Resend
+    const emailResponse = await resend.emails.send({
+      from: "PiercerHub <onboarding@resend.dev>",
+      to: ["thiagomvilla@gmail.com"], // Admin email
+      subject: `🆕 Novo Cadastro: ${userType === 'piercer' ? 'Body Piercer' : 'Fornecedor'} - ${fullName}`,
+      html: htmlContent,
+    });
 
-    if (!whatsappResponse.ok) {
-      console.error('WhatsApp notification failed:', responseText);
-      // Don't throw error - registration should still succeed even if notification fails
-    }
+    console.log('Email sent successfully:', emailResponse);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: 'Notification sent successfully' 
+        message: 'Email notification sent successfully',
+        emailResponse 
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -84,7 +120,7 @@ serve(async (req) => {
       }
     );
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in notify-registration:', error);
     return new Response(
       JSON.stringify({ 
