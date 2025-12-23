@@ -42,63 +42,72 @@ const Auth = () => {
     }
   }, [user, profile, profileLoading, navigate]);
 
-  const handleSignUp = async (e: React.FormEvent<HTMLFormElement>, certificateUrl?: string) => {
-    e.preventDefault();
+  const handleSignUp = async (form: HTMLFormElement, certificateUrl?: string) => {
+    if (isLoading) return;
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    const userData = {
-      full_name: formData.get('full_name') as string,
-      user_type: formData.get('user_type') as string,
-      cnpj: formData.get('cnpj') as string,
-      fantasy_name: formData.get('fantasy_name') as string,
-      commercial_contact: formData.get('commercial_contact') as string,
-      company_address: formData.get('company_address') as string,
-      certificate_url: certificateUrl || '',
-      certificate_approved: false,
-    };
+    let safetyTimer: number | undefined;
+    safetyTimer = window.setTimeout(() => {
+      setIsLoading(false);
+      toast({
+        title: 'Ainda processando…',
+        description: 'Se continuar, verifique sua conexão e tente novamente.',
+        variant: 'destructive',
+      });
+    }, 20000);
 
     try {
-      const result = await signUp(
-        formData.get('email') as string,
-        formData.get('password') as string,
-        userData
-      );
+      const formData = new FormData(form);
+      const email = (formData.get('email') as string) || '';
+      const password = (formData.get('password') as string) || '';
+
+      const userData = {
+        full_name: formData.get('full_name') as string,
+        user_type: formData.get('user_type') as string,
+        cnpj: formData.get('cnpj') as string,
+        fantasy_name: formData.get('fantasy_name') as string,
+        commercial_contact: formData.get('commercial_contact') as string,
+        company_address: formData.get('company_address') as string,
+        certificate_url: certificateUrl || '',
+        certificate_approved: false,
+      };
+
+      const result = await signUp(email, password, userData);
 
       if (!result.error) {
-        // Send notification to admin
-        try {
-          await supabase.functions.invoke('notify-registration', {
+        // Send notification to admin (non-blocking)
+        supabase.functions
+          .invoke('notify-registration', {
             body: {
               fullName: userData.full_name,
-              email: formData.get('email') as string,
+              email,
               userType: userData.user_type,
               cnpj: userData.cnpj,
               fantasyName: userData.fantasy_name,
               commercialContact: userData.commercial_contact,
               companyAddress: userData.company_address,
-              certificateUrl: certificateUrl,
-            }
-          });
-        } catch (error) {
-          console.error('Error sending notification:', error);
-        }
+              certificateUrl,
+            },
+          })
+          .catch((error) => console.error('Error sending notification:', error));
 
-        // Show success message to check email
         setSignupSuccess(true);
         toast({
-          title: "Cadastro enviado!",
-          description: "Verifique seu email para confirmar a conta.",
+          title: 'Cadastro enviado!',
+          description: 'Verifique seu email para confirmar a conta.',
         });
+
+        form.reset();
       }
     } catch (error) {
       console.error('Signup error:', error);
       toast({
-        title: "Erro no cadastro",
-        description: "Ocorreu um erro. Tente novamente.",
-        variant: "destructive"
+        title: 'Erro no cadastro',
+        description: 'Ocorreu um erro. Tente novamente.',
+        variant: 'destructive',
       });
     } finally {
+      if (safetyTimer) window.clearTimeout(safetyTimer);
       setIsLoading(false);
     }
   };
@@ -115,14 +124,14 @@ const Auth = () => {
 
       if (error) {
         toast({
-          title: "Erro",
+          title: 'Erro',
           description: error.message,
-          variant: "destructive"
+          variant: 'destructive',
         });
       } else {
         toast({
-          title: "Email enviado!",
-          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+          title: 'Email enviado!',
+          description: 'Verifique sua caixa de entrada para redefinir sua senha.',
         });
         setShowResetPassword(false);
         setResetEmail('');
@@ -138,13 +147,15 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const formData = new FormData(e.currentTarget);
-    await signIn(
-      formData.get('email') as string,
-      formData.get('password') as string
-    );
-
-    setIsLoading(false);
+    try {
+      const formData = new FormData(e.currentTarget);
+      await signIn(
+        formData.get('email') as string,
+        formData.get('password') as string
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -308,7 +319,7 @@ const Auth = () => {
 };
 
 interface SignUpFormProps {
-  onSubmit: (e: React.FormEvent<HTMLFormElement>, certificateUrl?: string) => void;
+  onSubmit: (form: HTMLFormElement, certificateUrl?: string) => Promise<void> | void;
   isLoading: boolean;
 }
 
@@ -329,9 +340,9 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
     if (!allowedTypes.includes(file.type)) {
       toast({
-        title: "Tipo de arquivo inválido",
-        description: "Envie uma imagem (JPG, PNG, WebP) ou PDF",
-        variant: "destructive"
+        title: 'Tipo de arquivo inválido',
+        description: 'Envie uma imagem (JPG, PNG, WebP) ou PDF',
+        variant: 'destructive',
       });
       return;
     }
@@ -339,9 +350,9 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast({
-        title: "Arquivo muito grande",
-        description: "O arquivo deve ter no máximo 5MB",
-        variant: "destructive"
+        title: 'Arquivo muito grande',
+        description: 'O arquivo deve ter no máximo 5MB',
+        variant: 'destructive',
       });
       return;
     }
@@ -364,9 +375,9 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
       if (error) {
         console.error('Error uploading certificate:', error);
         toast({
-          title: "Erro no upload",
-          description: "Não foi possível enviar o certificado",
-          variant: "destructive"
+          title: 'Erro no upload',
+          description: 'Não foi possível enviar o certificado',
+          variant: 'destructive',
         });
         return null;
       }
@@ -388,12 +399,14 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const form = e.currentTarget;
+
     // For piercers, certificate is required
     if (userType === 'piercer' && !certificateFile) {
       toast({
-        title: "Certificado obrigatório",
-        description: "Para body piercers, é necessário anexar o certificado de curso",
-        variant: "destructive"
+        title: 'Certificado obrigatório',
+        description: 'Para body piercers, é necessário anexar o certificado de curso',
+        variant: 'destructive',
       });
       return;
     }
@@ -401,7 +414,7 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
     // Generate a temporary userId for file upload path
     // The actual userId will be created during signup
     const tempUserId = crypto.randomUUID();
-    
+
     let uploadedUrl = '';
     if (certificateFile) {
       const url = await uploadCertificate(tempUserId);
@@ -411,7 +424,7 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
       }
     }
 
-    onSubmit(e, uploadedUrl);
+    await onSubmit(form, uploadedUrl);
   };
 
   return (
