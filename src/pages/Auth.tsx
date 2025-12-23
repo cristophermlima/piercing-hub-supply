@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
-import { User, Building2, ArrowLeft, Upload, FileCheck, Loader2, AlertCircle } from 'lucide-react';
+import { User, Building2, ArrowLeft, Upload, FileCheck, Loader2, AlertCircle, Eye, EyeOff, Mail, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -16,6 +16,11 @@ import logo from '@/assets/logo.png';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [signupSuccess, setSignupSuccess] = useState(false);
   const { signUp, signIn, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
   const navigate = useNavigate();
@@ -50,42 +55,83 @@ const Auth = () => {
       commercial_contact: formData.get('commercial_contact') as string,
       company_address: formData.get('company_address') as string,
       certificate_url: certificateUrl || '',
-      certificate_approved: false, // Sempre começa como não aprovado
+      certificate_approved: false,
     };
 
-    const result = await signUp(
-      formData.get('email') as string,
-      formData.get('password') as string,
-      userData
-    );
+    try {
+      const result = await signUp(
+        formData.get('email') as string,
+        formData.get('password') as string,
+        userData
+      );
 
-    if (!result.error) {
-      // Send notification to admin via WhatsApp
-      try {
-        await supabase.functions.invoke('notify-registration', {
-          body: {
-            fullName: userData.full_name,
-            email: formData.get('email') as string,
-            userType: userData.user_type,
-            cnpj: userData.cnpj,
-            fantasyName: userData.fantasy_name,
-            commercialContact: userData.commercial_contact,
-            companyAddress: userData.company_address,
-            certificateUrl: certificateUrl,
-          }
+      if (!result.error) {
+        // Send notification to admin
+        try {
+          await supabase.functions.invoke('notify-registration', {
+            body: {
+              fullName: userData.full_name,
+              email: formData.get('email') as string,
+              userType: userData.user_type,
+              cnpj: userData.cnpj,
+              fantasyName: userData.fantasy_name,
+              commercialContact: userData.commercial_contact,
+              companyAddress: userData.company_address,
+              certificateUrl: certificateUrl,
+            }
+          });
+        } catch (error) {
+          console.error('Error sending notification:', error);
+        }
+
+        // Show success message to check email
+        setSignupSuccess(true);
+        toast({
+          title: "Cadastro enviado!",
+          description: "Verifique seu email para confirmar a conta.",
         });
-      } catch (error) {
-        console.error('Error sending notification:', error);
-        // Don't block registration if notification fails
       }
-
+    } catch (error) {
+      console.error('Signup error:', error);
       toast({
-        title: "Cadastro enviado para análise!",
-        description: "Você receberá uma notificação quando seu cadastro for aprovado.",
+        title: "Erro no cadastro",
+        description: "Ocorreu um erro. Tente novamente.",
+        variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    setIsLoading(false);
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetEmail) return;
+
+    setResetLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/auth`,
+      });
+
+      if (error) {
+        toast({
+          title: "Erro",
+          description: error.message,
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Email enviado!",
+          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+        });
+        setShowResetPassword(false);
+        setResetEmail('');
+      }
+    } catch (error) {
+      console.error('Reset password error:', error);
+    } finally {
+      setResetLoading(false);
+    }
   };
 
   const handleSignIn = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -126,41 +172,134 @@ const Auth = () => {
                 <CardTitle>Fazer Login</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">E-mail</Label>
-                    <Input
-                      id="signin-email"
-                      name="email"
-                      type="email"
-                      placeholder="seu@email.com"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Senha</Label>
-                    <Input
-                      id="signin-password"
-                      name="password"
-                      type="password"
-                      placeholder="Sua senha"
-                      required
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? 'Entrando...' : 'Entrar'}
-                  </Button>
-                </form>
+                {showResetPassword ? (
+                  <form onSubmit={handleResetPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">E-mail</Label>
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary hover:bg-primary/90"
+                      disabled={resetLoading}
+                    >
+                      {resetLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Enviar link de recuperação
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full"
+                      onClick={() => setShowResetPassword(false)}
+                    >
+                      Voltar ao login
+                    </Button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleSignIn} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-email">E-mail</Label>
+                      <Input
+                        id="signin-email"
+                        name="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signin-password">Senha</Label>
+                      <div className="relative">
+                        <Input
+                          id="signin-password"
+                          name="password"
+                          type={showPassword ? 'text' : 'password'}
+                          placeholder="Sua senha"
+                          required
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      type="submit"
+                      className="w-full bg-primary hover:bg-primary/90"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? 'Entrando...' : 'Entrar'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="w-full text-primary"
+                      onClick={() => setShowResetPassword(true)}
+                    >
+                      Esqueci minha senha
+                    </Button>
+                  </form>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="signup">
-            <SignUpForm onSubmit={handleSignUp} isLoading={isLoading} />
+            {signupSuccess ? (
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <div className="mx-auto w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-foreground">Cadastro Enviado!</h3>
+                    <p className="text-muted-foreground">
+                      Verifique sua caixa de entrada e <strong>confirme seu email</strong> para ativar sua conta.
+                    </p>
+                    <Alert className="border-primary bg-primary/20 text-left">
+                      <Mail className="h-4 w-4 text-primary" />
+                      <AlertDescription className="text-foreground">
+                        Após confirmar o email, seu cadastro será analisado e você receberá uma notificação quando for aprovado.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      variant="outline"
+                      onClick={() => setSignupSuccess(false)}
+                      className="mt-4"
+                    >
+                      Fazer novo cadastro
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <SignUpForm onSubmit={handleSignUp} isLoading={isLoading} />
+            )}
           </TabsContent>
         </Tabs>
       </div>
@@ -178,6 +317,7 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
   const [certificateFile, setCertificateFile] = useState<File | null>(null);
   const [uploadingCertificate, setUploadingCertificate] = useState(false);
   const [certificateUrl, setCertificateUrl] = useState<string>('');
+  const [showPassword, setShowPassword] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
@@ -400,7 +540,28 @@ const SignUpForm = ({ onSubmit, isLoading }: SignUpFormProps) => {
 
           <div className="space-y-2">
             <Label htmlFor="password">Senha</Label>
-            <Input id="password" name="password" type="password" placeholder="Crie uma senha segura" required />
+            <div className="relative">
+              <Input 
+                id="password" 
+                name="password" 
+                type={showPassword ? 'text' : 'password'} 
+                placeholder="Crie uma senha segura" 
+                required 
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
           </div>
 
           <Button
