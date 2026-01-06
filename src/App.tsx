@@ -17,6 +17,7 @@ import SupplierReports from "./pages/SupplierReports";
 import SupplierProducts from "./pages/SupplierProducts";
 import Orders from "./pages/Orders";
 import PendingApproval from "./pages/PendingApproval";
+import AdminPanel from "./pages/AdminPanel";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/pending-approval" element={<PendingApproval />} />
+              <Route path="/admin" element={<AdminPanel />} />
               <Route path="/dashboard" element={<SupplierDashboard />} />
               <Route path="/supplier/products" element={<SupplierProducts />} />
               <Route path="/supplier/orders" element={<SupplierOrders />} />
