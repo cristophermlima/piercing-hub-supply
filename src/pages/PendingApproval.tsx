@@ -2,15 +2,17 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Clock, LogOut, RefreshCw } from 'lucide-react';
+import { Clock, LogOut, RefreshCw, Shield } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useIsAdmin } from '@/hooks/useUserRole';
 import logo from '@/assets/logo.png';
 
 const PendingApproval = () => {
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
   const { data: profile, refetch, isLoading } = useProfile();
+  const { isAdmin, isLoading: roleLoading } = useIsAdmin();
 
   const handleSignOut = async () => {
     await signOut();
@@ -29,6 +31,14 @@ const PendingApproval = () => {
       }
     }
   };
+
+  // If admin, redirect to admin panel
+  React.useEffect(() => {
+    if (!roleLoading && isAdmin) {
+      navigate('/admin');
+      return;
+    }
+  }, [isAdmin, roleLoading, navigate]);
 
   // If approved, redirect immediately
   React.useEffect(() => {
