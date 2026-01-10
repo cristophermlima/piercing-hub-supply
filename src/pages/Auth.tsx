@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
+import { useIsAdmin } from '@/hooks/useUserRole';
 import { User, Building2, ArrowLeft, Upload, FileCheck, Loader2, AlertCircle, Eye, EyeOff, Mail, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,12 +24,19 @@ const Auth = () => {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const { signUp, signIn, user } = useAuth();
   const { data: profile, isLoading: profileLoading } = useProfile();
+  const { isAdmin, isLoading: adminLoading } = useIsAdmin();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Redirect if already authenticated and approved
+  // Redirect if already authenticated
   useEffect(() => {
-    if (user && !profileLoading) {
+    if (user && !profileLoading && !adminLoading) {
+      // Admin goes to admin panel
+      if (isAdmin) {
+        navigate('/admin');
+        return;
+      }
+      
       const userType = user.user_metadata?.user_type;
       
       // Check if certificate is approved for piercers or supplier is approved
@@ -38,9 +46,12 @@ const Auth = () => {
         } else {
           navigate('/marketplace');
         }
+      } else {
+        // Not approved yet, go to pending approval page
+        navigate('/pending-approval');
       }
     }
-  }, [user, profile, profileLoading, navigate]);
+  }, [user, profile, profileLoading, isAdmin, adminLoading, navigate]);
 
   const handleSignUp = async (form: HTMLFormElement, certificateUrl?: string) => {
     if (isLoading) return;

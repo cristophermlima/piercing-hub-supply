@@ -54,7 +54,8 @@ export const useProfile = () => {
           phone: user.user_metadata?.phone || '',
           user_type: user.user_metadata?.user_type || 'buyer',
           created_at: user.created_at || new Date().toISOString(),
-          updated_at: user.updated_at || new Date().toISOString()
+          updated_at: user.updated_at || new Date().toISOString(),
+          certificate_approved: user.user_metadata?.certificate_approved ?? undefined
         };
         
         console.log('Using profile from user metadata:', profileFromMetadata);
