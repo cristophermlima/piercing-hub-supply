@@ -42,14 +42,15 @@ const AdminPanel = () => {
   const queryClient = useQueryClient();
   const [selectedCertificate, setSelectedCertificate] = useState<string | null>(null);
 
-  // Fetch pending profiles
+  // Fetch pending profiles (false OR null)
   const { data: pendingUsers, isLoading: usersLoading, refetch } = useQuery({
     queryKey: ['admin-pending-users'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('certificate_approved', false)
+        .or('certificate_approved.eq.false,certificate_approved.is.null')
+        .in('user_type', ['piercer', 'supplier'])
         .order('created_at', { ascending: false });
 
       if (error) throw error;
