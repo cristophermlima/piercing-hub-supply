@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, Search, User, LogOut, UserCircle, Package } from 'lucide-react';
+import { ShoppingCart, Search, User, LogOut, UserCircle, Package, Heart, MessageCircle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
+import { useUnreadCount } from '@/hooks/useMessages';
 import logo from '@/assets/logo.png';
 import {
   DropdownMenu,
@@ -23,6 +23,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }) => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: unreadCount } = useUnreadCount();
 
   const handleSignOut = async () => {
     await signOut();
@@ -56,7 +57,37 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
             </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
+            {/* Favorites Button */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-gray-300 hover:text-white hover:bg-gray-800"
+                onClick={() => navigate('/favorites')}
+              >
+                <Heart className="h-5 w-5" />
+              </Button>
+            )}
+
+            {/* Messages Button */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative text-gray-300 hover:text-white hover:bg-gray-800"
+                onClick={() => navigate('/messages')}
+              >
+                <MessageCircle className="h-5 w-5" />
+                {unreadCount && unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </Button>
+            )}
+
+            {/* Cart Button */}
             <Button
               variant="outline"
               className="relative border-gray-600 bg-gray-800 text-white hover:bg-gray-700"
@@ -86,6 +117,19 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
                   <DropdownMenuItem onClick={() => navigate('/orders')}>
                     <Package className="h-4 w-4 mr-2" />
                     Meus Pedidos
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/favorites')}>
+                    <Heart className="h-4 w-4 mr-2" />
+                    Favoritos
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/messages')}>
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Mensagens
+                    {unreadCount && unreadCount > 0 && (
+                      <span className="ml-auto bg-destructive text-destructive-foreground text-xs rounded-full px-1.5">
+                        {unreadCount}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/marketplace')}>
                     <ShoppingCart className="h-4 w-4 mr-2" />
