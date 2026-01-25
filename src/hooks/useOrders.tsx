@@ -8,6 +8,8 @@ export interface OrderItem {
   product_id: string;
   quantity: number;
   price: number;
+  status?: string;
+  tracking_code?: string;
   products: {
     name: string;
     image_urls: string[];
