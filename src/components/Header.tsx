@@ -1,10 +1,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { ShoppingCart, Search, User, LogOut, UserCircle, Package, Heart, MessageCircle } from 'lucide-react';
+import { ShoppingCart, User, LogOut, UserCircle, Package, Heart, MessageCircle, MapPin, Bell } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useUnreadCount } from '@/hooks/useMessages';
+import { SearchAutocomplete } from '@/components/search/SearchAutocomplete';
 import logo from '@/assets/logo.png';
 import {
   DropdownMenu,
@@ -45,16 +45,10 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
           </div>
 
           <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                type="text"
-                placeholder="Buscar produtos..."
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-                className="pl-10 bg-white/10 border-gray-600 text-white placeholder:text-gray-400"
-              />
-            </div>
+            <SearchAutocomplete
+              value={searchTerm}
+              onChange={onSearchChange}
+            />
           </div>
 
           <div className="flex items-center space-x-2">
@@ -122,6 +116,14 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
                     <Heart className="h-4 w-4 mr-2" />
                     Favoritos
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/addresses')}>
+                    <MapPin className="h-4 w-4 mr-2" />
+                    Meus Endereços
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/price-alerts')}>
+                    <Bell className="h-4 w-4 mr-2" />
+                    Alertas de Preço
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/messages')}>
                     <MessageCircle className="h-4 w-4 mr-2" />
                     Mensagens
@@ -130,10 +132,6 @@ const Header: React.FC<HeaderProps> = ({ searchTerm, onSearchChange, cartItems }
                         {unreadCount}
                       </span>
                     )}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/marketplace')}>
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    Marketplace
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>

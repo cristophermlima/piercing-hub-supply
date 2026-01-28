@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Header from '@/components/Header';
 import ProductCard from '@/components/ProductCard';
 import FilterBar from '@/components/FilterBar';
+import { PromotionalCarousel } from '@/components/banners/PromotionalCarousel';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -118,6 +119,9 @@ const Marketplace = () => {
       />
 
       <div className="container mx-auto px-4 py-8">
+        {/* Promotional Banners */}
+        <PromotionalCarousel />
+
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">
             Marketplace ({filteredProducts.length} produtos)

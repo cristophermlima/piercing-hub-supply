@@ -16,12 +16,16 @@ import SupplierOrders from "./pages/SupplierOrders";
 import SupplierReports from "./pages/SupplierReports";
 import SupplierProducts from "./pages/SupplierProducts";
 import SupplierCoupons from "./pages/SupplierCoupons";
+import SupplierBanners from "./pages/SupplierBanners";
+import SupplierStockAlerts from "./pages/SupplierStockAlerts";
 import ProductDetails from "./pages/ProductDetails";
 import Orders from "./pages/Orders";
 import PendingApproval from "./pages/PendingApproval";
 import AdminPanel from "./pages/AdminPanel";
 import Favorites from "./pages/Favorites";
 import Messages from "./pages/Messages";
+import UserAddresses from "./pages/UserAddresses";
+import UserPriceAlerts from "./pages/UserPriceAlerts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +56,10 @@ const App = () => (
               <Route path="/supplier/orders" element={<SupplierOrders />} />
               <Route path="/supplier/reports" element={<SupplierReports />} />
               <Route path="/supplier/coupons" element={<SupplierCoupons />} />
+              <Route path="/supplier/banners" element={<SupplierBanners />} />
+              <Route path="/supplier/stock-alerts" element={<SupplierStockAlerts />} />
+              <Route path="/addresses" element={<UserAddresses />} />
+              <Route path="/price-alerts" element={<UserPriceAlerts />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>

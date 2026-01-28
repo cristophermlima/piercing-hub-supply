@@ -9,6 +9,8 @@ import { StarRating } from '@/components/reviews/StarRating';
 import { ReviewList } from '@/components/reviews/ReviewList';
 import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
+import { ShareProduct } from '@/components/product/ShareProduct';
+import { PriceAlertButton } from '@/components/product/PriceAlertButton';
 import { useProducts } from '@/hooks/useProducts';
 import { useProductRating } from '@/hooks/useReviews';
 import { useTrackProductView } from '@/hooks/useRecentlyViewed';
@@ -221,6 +223,12 @@ const ProductDetails = () => {
                 <MessageCircle className="h-5 w-5 mr-2" />
                 Contato
               </Button>
+            </div>
+
+            {/* Secondary Actions */}
+            <div className="flex gap-3">
+              <ShareProduct productId={product.id} productName={product.name} />
+              <PriceAlertButton productId={product.id} currentPrice={product.price} />
             </div>
 
             {/* Description */}
