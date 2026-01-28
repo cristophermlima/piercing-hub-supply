@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useOrders } from '@/hooks/useOrders';
 import { OrderTrackingTimeline } from '@/components/orders/OrderTrackingTimeline';
+import { ReturnRequestForm } from '@/components/returns/ReturnRequestForm';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Package, Loader2, ArrowLeft, Truck } from 'lucide-react';
@@ -104,6 +105,12 @@ const Orders = () => {
                         <Truck className="h-4 w-4 mr-2" />
                         Rastrear
                       </Button>
+                      {(order.status === 'delivered' || order.status === 'completed') && (
+                        <ReturnRequestForm 
+                          orderId={order.id} 
+                          orderTotal={order.total_amount} 
+                        />
+                      )}
                     </div>
                   </div>
                 </CardHeader>

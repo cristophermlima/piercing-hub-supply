@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Package, DollarSign, TrendingUp, Eye, BarChart3 } from 'lucide-react';
+import { Plus, Package, DollarSign, TrendingUp, Eye, BarChart3, ImageIcon, Bell, Tag } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile } from '@/hooks/useProfile';
 import { useSupplierProducts } from '@/hooks/useProducts';
@@ -141,18 +141,15 @@ const SupplierDashboard = () => {
         </div>
 
         {/* Ações Rápidas */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
           <Card className="cursor-pointer hover:shadow-lg transition-shadow" 
                 onClick={() => navigate('/supplier/products')}>
             <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col items-center text-center space-y-2">
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <Package className="h-6 w-6 text-primary" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">Gerenciar Produtos</h3>
-                  <p className="text-sm text-gray-600">Adicionar, editar ou remover produtos</p>
-                </div>
+                <h3 className="font-semibold text-sm">Produtos</h3>
               </div>
             </CardContent>
           </Card>
@@ -160,14 +157,11 @@ const SupplierDashboard = () => {
           <Card className="cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => navigate('/supplier/orders')}>
             <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
+              <div className="flex flex-col items-center text-center space-y-2">
                 <div className="p-3 bg-green-100 rounded-lg">
                   <Package className="h-6 w-6 text-green-600" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">Pedidos</h3>
-                  <p className="text-sm text-gray-600">Visualizar e gerenciar pedidos</p>
-                </div>
+                <h3 className="font-semibold text-sm">Pedidos</h3>
               </div>
             </CardContent>
           </Card>
@@ -175,14 +169,47 @@ const SupplierDashboard = () => {
           <Card className="cursor-pointer hover:shadow-lg transition-shadow"
                 onClick={() => navigate('/supplier/reports')}>
             <CardContent className="pt-6">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-primary" />
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <BarChart3 className="h-6 w-6 text-blue-600" />
                 </div>
-                <div>
-                  <h3 className="font-semibold">Relatórios</h3>
-                  <p className="text-sm text-gray-600">Acompanhar vendas e métricas</p>
+                <h3 className="font-semibold text-sm">Relatórios</h3>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate('/supplier/coupons')}>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Tag className="h-6 w-6 text-purple-600" />
                 </div>
+                <h3 className="font-semibold text-sm">Cupons</h3>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate('/supplier/banners')}>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="p-3 bg-orange-100 rounded-lg">
+                  <ImageIcon className="h-6 w-6 text-orange-600" />
+                </div>
+                <h3 className="font-semibold text-sm">Banners</h3>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => navigate('/supplier/stock-alerts')}>
+            <CardContent className="pt-6">
+              <div className="flex flex-col items-center text-center space-y-2">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Bell className="h-6 w-6 text-yellow-600" />
+                </div>
+                <h3 className="font-semibold text-sm">Alertas</h3>
               </div>
             </CardContent>
           </Card>
